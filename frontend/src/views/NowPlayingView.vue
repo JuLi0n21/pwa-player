@@ -23,8 +23,9 @@ const audioStore = useAudioStore();
     <div class="flex flex-col justify-around">
       <div class="relative">
         <i class="relative p-36 fa-solid fa-play">
-         
-          <img class="h-72 absolute top-4 left-0 bottom-0 right-0 bg-center bg-cover rounded-lg" :src="encodeURI(audioStore.bgimg)" :key="audioStore.bgimg" />
+
+          <img class="h-72 absolute top-4 left-0 bottom-0 right-0 bg-center bg-cover rounded-lg"
+            :src="encodeURI(audioStore.bgimg + '?h=500&w=500')" :key="audioStore.bgimg" />
         </i>
       </div>
 
@@ -46,11 +47,11 @@ const audioStore = useAudioStore();
             <p>{{ audioStore.artist }}</p>
           </div>
           <div class="flex flex-col justify-between mb-4">
-          <i @click="audioStore.toggleRepeat" :class="[audioStore.repeat ? 'text-pink-500' : '']"
-            class="fa-solid fa-repeat"></i>
+            <i @click="audioStore.toggleRepeat" :class="[audioStore.repeat ? 'text-pink-500' : '']"
+              class="fa-solid fa-repeat"></i>
             <i @click="this.$router.go(-1);" class="fa-solid fa-arrow-down"></i>
+          </div>
         </div>
-      </div>
         <div class="flex">
           <input
             class="appearance-none mx-4 flex-1 bg-yellow-200 bg-opacity-20 accent-yellow-600 rounded-lg outline-none slider"

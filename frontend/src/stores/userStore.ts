@@ -4,7 +4,7 @@ import type { Song, CollectionPreview } from '@/script/types';
 
 export const useUserStore = defineStore('userStore', () => {
   const userId = ref(null)
-  const baseUrl = ref('https://localhost:7254/')
+  const baseUrl = ref('https://service.illegalesachen.download/')
 
   async function fetchSong(hash: string): Promise<Song> {
     try {
@@ -20,12 +20,12 @@ export const useUserStore = defineStore('userStore', () => {
       console.error('Failed to fetch songs:', error);
       return {
         hash: "-1",
-    name: "song name",
-    artist: "artist name",
-    length: 0,
-    url: "song.mp3",
-    previewimage: "404.im5",
-    mapper: "map",
+        name: "song name",
+        artist: "artist name",
+        length: 0,
+        url: "song.mp3",
+        previewimage: "404.im5",
+        mapper: "map",
       } as Song;
     }
   }

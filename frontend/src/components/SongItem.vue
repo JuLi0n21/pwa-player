@@ -4,11 +4,11 @@ import { useAudioStore } from '@/stores/audioStore';
 import { useUserStore } from '@/stores/userStore';
 import type { Song } from '@/script/types';
 
-const props = defineProps<{ song: Song}>();
+const props = defineProps<{ song: Song }>();
 const userStore = useUserStore();
 const audioStore = useAudioStore();
 
-function updateSong(){
+function updateSong() {
 
   let updated = props.song;
   audioStore.setSong(updated)
@@ -19,7 +19,7 @@ function updateSong(){
 <template>
 
   <div @click="updateSong" class="m-2 border border-pink-500 rounded-lg flex">
-    <img class="h-16 w-16 m-1 rounded-lg" :src="encodeURI(props.song.previewimage)" loading="lazy" />
+    <img class="h-16 w-16 m-1 rounded-lg" :src="encodeURI(props.song.previewimage + '?h=64&w=64')" loading="lazy" />
     <div class="flex flex-col">
       <h3 class="text-nowrap overflow-scroll">
         <slot name="songName">{{ props.song.name }}</slot>

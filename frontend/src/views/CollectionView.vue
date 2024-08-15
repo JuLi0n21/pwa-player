@@ -11,7 +11,7 @@ const collections = ref<CollectionPreview[]>([]);
 onMounted(async () => {
   const data = await userStore.fetchCollections();
   data.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
+    song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}?h=80&w=80`;
   })
   collections.value = data;
 
@@ -21,12 +21,7 @@ onMounted(async () => {
 <template>
   <main class="flex-1 text-center flex flex-col h-full overflow-scroll">
     <div class="flex flex-col overflow-scroll">
-      <CollectionListItem 
-        v-for="(collection, index) in collections"
-        :key="index"
-        :collection="collection"
-      />
+      <CollectionListItem v-for="(collection, index) in collections" :key="index" :collection="collection" />
     </div>
   </main>
 </template>
-

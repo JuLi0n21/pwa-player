@@ -11,8 +11,8 @@ const audioStore = useAudioStore();
     <hr>
     <div class="relative wrapper p-1 grow text-yellow-500">
 
-      <img :src="encodeURI(audioStore.bgimg)" class="absolute top-0 left-0 w-full h-full"
-       :style="{ 'filter': 'blur(2px)', 'opacity': '0.5' }" alt="Background Image" />
+      <img :src="encodeURI(audioStore.bgimg + '?h=150&w=400')" class="absolute top-0 left-0 w-full h-full"
+        :style="{ 'filter': 'blur(2px)', 'opacity': '0.5' }" alt="Background Image" />
 
       <nav class="relative flex justify-around my-2 z-10">
 
@@ -37,7 +37,8 @@ const audioStore = useAudioStore();
         <i class="fa-solid fa-arrow-up"></i>
       </RouterLink>
 
-      <marquee class="relative mx-16 text-2xl font-bold text-pink-500" behavior="scroll">{{ audioStore.artist }} - {{ audioStore.title
+      <marquee class="relative mx-16 text-2xl font-bold text-pink-500" behavior="scroll">{{ audioStore.artist }} - {{
+        audioStore.title
         }}</marquee>
       <audio controls class="hidden" id="audio-player" :src="audioStore.songSrc"
         @timeupdate="audioStore.update"></audio>

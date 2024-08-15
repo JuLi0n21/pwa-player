@@ -17,7 +17,7 @@ const name = ref('name');
 onMounted(async () => {
   const data = await userStore.fetchCollection(Number(route.params.id));
   console.log(data)
-  
+
   data.songs.forEach(song => {
     song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
     song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
@@ -47,10 +47,6 @@ onMounted(async () => {
 
   <div class="flex-1 flex-col h-full overflow-scroll">
 
-      <SongItem 
-        v-for="(song, index) in songs"
-        :key="index"
-        :song="song"
-      />
+    <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
   </div>
 </template>
