@@ -70,6 +70,7 @@ export const useAudioStore = defineStore('audioStore', () => {
       audio.pause()
       audio.currentTime = 0;
       audio.play()
+      return;
     }
 
     if (shuffle.value) {
@@ -77,6 +78,7 @@ export const useAudioStore = defineStore('audioStore', () => {
 
       setSong(activeCollection.value[Math.floor(activeCollection.value.length * Math.random())])
       audio.play()
+      return;
     }
 
     toggleNext()
@@ -89,7 +91,7 @@ export const useAudioStore = defineStore('audioStore', () => {
 
     var audio = document.getElementById("audio-player") as HTMLAudioElement;
 
-    audio.currentTime = Math.round((audioslider.value / 100) * audio.duration)
+    audio.currentTime = Math.round((Number(audioslider.value) / 100) * audio.duration)
   }
 
   function togglePrev() {

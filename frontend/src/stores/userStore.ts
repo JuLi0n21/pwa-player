@@ -60,9 +60,9 @@ export const useUserStore = defineStore('userStore', () => {
   }
 
 
-  async function fetchCollections(): Promise<CollectionPreview[]> {
-    const cacheKey = 'collections_cache';
-    const url = `${baseUrl.value}api/v1/collections/`;
+  async function fetchCollections(offset: number, limit: number): Promise<CollectionPreview[]> {
+    const cacheKey = `collections_cache_${offset}_${limit}`;
+    const url = `${baseUrl.value}api/v1/collections/?offset=${offset}&limit=${limit}`;
     return fetchWithCache<CollectionPreview[]>(cacheKey, url);
   }
 
@@ -84,7 +84,17 @@ export const useUserStore = defineStore('userStore', () => {
     return fetchWithCache<Song[]>(cacheKey, url);
   }
 
+  async function fetchActiveSearch(query: string): Promise<{}> {
+    const cacheKey = `collections_activeSearch_${query}`;
+    const url = `${baseUrl.value}api/v1/search/active?q=${query}`;
+    return fetchWithCache(cacheKey, url);
+  }
 
+  async function fetchSearchArtist(query: string): Promise<Song[]> {
+    const cacheKey = `collections_artist_${query}`;
+    const url = `${baseUrl.value}api/v1/search/artist?q=${query}`;
+    return fetchWithCache<Song[]>(cacheKey, url);
+  }
 
-  return { fetchSong, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, userId, baseUrl }
+  return { fetchSong, fetchActiveSearch, fetchSearchArtist, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, userId, baseUrl }
 })

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
+using shitweb;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -39,12 +40,12 @@ app.MapGet("/api/v1/songs/recent", (int? limit, int? offset) =>
         var limitValue = limit ?? 100; // default to 10 if not provided
         var offsetValue = offset ?? 0; // default to 0 if not provided
 
-        return Results.Json(Osudb.Instance.GetRecent(limitValue, offsetValue));
+        return Results.Json(SqliteDB.GetByRecent(limitValue, offsetValue));
     });
 
 app.MapGet("/api/v1/songs/favorite", (int? limit, int? offset) =>
     {
-        var limitValue = limit ?? 10; // default to 10 if not provided
+        var limitValue = limit ?? 100; // default to 10 if not provided
         var offsetValue = offset ?? 0; // default to 0 if not provided
 
         return Results.Ok(new { Limit = limitValue, Offset = offsetValue, Message = "List of favorite songs" });
@@ -57,12 +58,16 @@ app.MapGet("/api/v1/songs/{hash}", (string hash) =>
 
 app.MapGet("/api/v1/collections/", async (int? limit, int? offset, [FromServices] IMemoryCache cache) =>
     {
-        const string cacheKey = "collections";
+
+        var limitValue = limit ?? 100; // default to 10 if not provided
+        var offsetValue = offset ?? 0;
+
+        string cacheKey = $"collections_{offsetValue}_{limitValue}";
 
         if (!cache.TryGetValue(cacheKey, out var collections))
         {
          
-            collections = Osudb.Instance.GetCollections();
+            collections = Osudb.Instance.GetCollections(limit: limitValue, offset: offsetValue);
 
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromDays(1)) 
@@ -105,6 +110,28 @@ app.MapGet("/api/v1/audio/{*fileName}", async (string fileName, HttpContext cont
     return Results.Stream(fileStream, contentType, enableRangeProcessing: true);
 });
 
+app.MapGet("/api/v1/search/active", async (string? q) =>
+{
+    return Results.Ok(SqliteDB.activeSearch(q));
+});
+
+app.MapGet("/api/v1/search/artist", async (string? q, int? limit, int? offset) =>
+{
+    var limitv = limit ?? 100;
+    var offsetv = offset ?? 0;
+
+    return Results.Ok(SqliteDB.GetArtistSearch(q, limitv, offsetv));
+});
+
+app.MapGet("/api/v1/search/songs", async (string? q, int? limit, int? offset) =>
+{
+    return Results.Ok();
+});
+
+app.MapGet("/api/v1/search/collections", async (string? q, int? limit, int? offset) =>
+{
+    return Results.Ok();
+});
 
 app.MapGet("/api/v1/images/{*filename}", async (string filename, int? h, int? w) =>
 {
@@ -195,4 +222,5 @@ static ImageFormat GetImageFormat(string extension)
     };
 }
 
+Osudb.Instance.ToString();
 app.Run();

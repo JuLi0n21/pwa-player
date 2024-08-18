@@ -49,7 +49,7 @@ const audioStore = useAudioStore();
           <div class="flex flex-col justify-between mb-4">
             <i @click="audioStore.toggleRepeat" :class="[audioStore.repeat ? 'text-pink-500' : '']"
               class="fa-solid fa-repeat"></i>
-            <i @click="this.$router.go(-1);" class="fa-solid fa-arrow-down"></i>
+            <i @click="$router.go(-1);" class="fa-solid fa-arrow-down"></i>
           </div>
         </div>
         <div class="flex">
