@@ -35,7 +35,7 @@ const fetchRecent = async () => {
   songs.value = [...songs.value, ...data];
 
   isLoading.value = false;
-  audioStore.setCollection(null);
+  audioStore.setCollection(songs.value);
 }
 
 

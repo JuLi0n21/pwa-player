@@ -184,22 +184,7 @@ namespace shitweb
                     {
                         while (reader.Read())
                         {
-                            string folder = reader.GetString(reader.GetOrdinal("FolderName"));
-                            string file = reader.GetString(reader.GetOrdinal("FileName"));
-                            string audio = reader.GetString(reader.GetOrdinal("AudioFileName"));
-
-                            var img = Osudb.getBG(folder, file);
-                            Song song = new Song(
-                                hash: reader.GetString(reader.GetOrdinal("MD5Hash")),
-                                name: reader.GetString(reader.GetOrdinal("Title")),
-                                artist: reader.GetString(reader.GetOrdinal("Artist")),
-                                length: reader.GetInt32(reader.GetOrdinal("TotalTime")),
-                            url: $"{folder}/{audio}",
-                            previewimage: img,
-                                mapper: reader.GetString(reader.GetOrdinal("Creator"))
-                            );
-
-                            songs.Add(song);
+                            songs.Add(new Song(reader));
                         }
                     }
                 }
@@ -281,23 +266,7 @@ namespace shitweb
                     {
                         while (reader.Read())
                         {
-
-                            string folder = reader.GetString(reader.GetOrdinal("FolderName"));
-                            string file = reader.GetString(reader.GetOrdinal("FileName"));
-                            string audio = reader.GetString(reader.GetOrdinal("AudioFileName"));
-
-                            var img = Osudb.getBG(folder, file);
-                            Song song = new Song(
-                                hash: reader.GetString(reader.GetOrdinal("MD5Hash")),
-                                name: reader.GetString(reader.GetOrdinal("Title")),
-                                artist: reader.GetString(reader.GetOrdinal("Artist")),
-                                length: reader.GetInt32(reader.GetOrdinal("TotalTime")),
-                            url: $"{folder}/{audio}",
-                            previewimage: img,
-                                mapper: reader.GetString(reader.GetOrdinal("Creator"))
-                            );
-
-                            return song;
+                            return new Song(reader);
                         }
                     }
                 }
@@ -336,22 +305,7 @@ namespace shitweb
 
                         while (reader.Read()) {
 
-                            string folder = reader.GetString(reader.GetOrdinal("FolderName"));
-                            string file = reader.GetString(reader.GetOrdinal("FileName"));
-                            string audio = reader.GetString(reader.GetOrdinal("AudioFileName"));
-
-                            var img = Osudb.getBG(folder, file);
-                            Song song = new Song(
-                                hash: reader.GetString(reader.GetOrdinal("MD5Hash")),
-                                name: reader.GetString(reader.GetOrdinal("Title")),
-                                artist: reader.GetString(reader.GetOrdinal("Artist")),
-                                length: reader.GetInt32(reader.GetOrdinal("TotalTime")),
-                            url: $"{folder}/{audio}",
-                            previewimage: img,
-                                mapper: reader.GetString(reader.GetOrdinal("Creator"))
-                            );
-
-                            search.Songs.Add(song);
+                            search.Songs.Add(new Song(reader));
                         }
                     }
                 }
@@ -360,6 +314,7 @@ namespace shitweb
                         Artist
                     FROM Beatmap
                     WHERE Artist LIKE @query
+                    OR Title LIKE @query
                     Group By Artist
                     LIMIT 5";
 
@@ -417,22 +372,7 @@ namespace shitweb
 
                         while (reader.Read())
                         {
-                            string folder = reader.GetString(reader.GetOrdinal("FolderName"));
-                            string file = reader.GetString(reader.GetOrdinal("FileName"));
-                            string audio = reader.GetString(reader.GetOrdinal("AudioFileName"));
-
-                            var img = Osudb.getBG(folder, file);
-                            Song song = new Song(
-                                hash: reader.GetString(reader.GetOrdinal("MD5Hash")),
-                                name: reader.GetString(reader.GetOrdinal("Title")),
-                                artist: reader.GetString(reader.GetOrdinal("Artist")),
-                                length: reader.GetInt32(reader.GetOrdinal("TotalTime")),
-                            url: $"{folder}/{audio}",
-                            previewimage: img,
-                                mapper: reader.GetString(reader.GetOrdinal("Creator"))
-                            );
-
-                            songs.Add(song);
+                            songs.Add(new Song(reader));
                         }
                     }
                 }

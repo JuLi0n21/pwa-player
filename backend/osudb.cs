@@ -144,9 +144,9 @@ public class Osudb
 
             if (match.Success)
             {
-                string background = match.Groups["image_filename"].Value;
+                string background = Uri.EscapeDataString(match.Groups["image_filename"].Value);
 
-                return Path.Combine(songfolder, background);
+                return Path.Combine(Uri.EscapeDataString(songfolder), background);
             }
 
             pattern = @"\d+,\d+,""(?<image_filename>[^""]+\.[a-zA-Z]+)""";
@@ -155,10 +155,10 @@ public class Osudb
 
             if (match.Success)
             {
-                string background = match.Groups["image_filename"].Value;
-                return Path.Combine(songfolder, background);
+                string background = Uri.EscapeDataString(match.Groups["image_filename"].Value);
+                return Path.Combine(Uri.EscapeDataString(songfolder), background);
             }
         }
-        return null;
+        return "default-bg.png";
     }
 }

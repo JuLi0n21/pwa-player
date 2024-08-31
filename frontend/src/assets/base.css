@@ -1,5 +1,5 @@
 body {
-    background-color: rgba(28, 23, 25, 0);
+    background-color: var(--background-color);
     margin:0;
     padding: 0;
 }
@@ -28,5 +28,40 @@ min-height: 0px;
 }
 
 .router-link-active {
-    color: #ec4899;
+    color: var(--action-color);
+}
+
+:root {
+  --background-color: rgba(28, 23, 25, 1);
+  --information-color: #ec4899;
+  --border-color: #ec4899;
+  --action-color: #eab308;
+}
+
+.bordercolor {
+  border-color: var(--border-color);
+}
+
+.bg {
+  background-color: var(--background-color)
+}
+
+.action {
+  color: var(--action-color)
+}
+
+.info {
+  color: var(--information-color)
+}
+
+.info:hover {
+  color: var(--information-color)
+}
+
+searcheven {
+    background-color: lighten(var(--background-color),10%);
+}
+
+searchodd {
+    background-color: lighten(var(--background-color),15%);
 }

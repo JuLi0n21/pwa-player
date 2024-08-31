@@ -4,7 +4,12 @@ import { useAudioStore } from '@/stores/audioStore';
 import { useUserStore } from '@/stores/userStore';
 import type { Song } from '@/script/types';
 
-const props = defineProps<{ song: Song }>();
+const props = defineProps<{
+  song: Song,
+  action?: string,
+  info?: string,
+  border?: string,
+}>();
 const userStore = useUserStore();
 const audioStore = useAudioStore();
 
@@ -18,17 +23,21 @@ function updateSong() {
 
 <template>
 
-  <div @click="updateSong" class="m-2 border border-pink-500 rounded-lg flex">
-    <img class="h-16 w-16 m-1 rounded-lg" :src="encodeURI(props.song.previewimage + '?h=64&w=64')" loading="lazy" />
-    <div class="flex flex-col">
-      <h3 class="text-nowrap overflow-scroll">
-        <slot name="songName">{{ props.song.name }}</slot>
-      </h3>
-      <h5 class="text-yellow-500 text-sm">
-        <slot name="artist">{{ props.song.artist }}</slot>
+  <div @click="updateSong" :style="{ borderColor: border }" class="m-1 border bordercolor rounded-lg flex">
+    <img class="h-14 w-14 m-1 rounded-lg"
+      :src="encodeURI(props.song?.previewimage ? props.song?.previewimage + '?h=56&w=56' : '/default-bg.png')"
+      loading="lazy" />
+    <div class="flex flex-col overflow-hidden">
+      <p :style="{ color: info }" class="text-nowrap text-ellipsis overflow-hidden text-base info">
+        <slot name="songName">{{ props.song?.name ?? 'Title' }}</slot>
+      </p>
+      <h5 :style="{ color: action }" class="action text-sm text-nowrap text-ellipsis overflow-hidden text-base">
+        <slot name="artist">{{ props.song?.artist ?? 'Artist' }}</slot>
       </h5>
-      <h5 class="text-yellow-500 text-sm">
-        <slot name="length">{{ props.song.length }}</slot>
+      <h5 :style="{ color: action }" class="action text-sm">
+        <slot name="length">{{ Math.floor(props.song?.length ?? 0 / 60000) }}:{{ Math.floor((props.song?.length ?? 0 /
+          1000)
+          % 60).toString().padStart(2, '0') }}</slot>
       </h5>
 
     </div>

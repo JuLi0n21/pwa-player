@@ -9,37 +9,35 @@ const audioStore = useAudioStore();
 <template>
   <div>
     <hr>
-    <div class="relative wrapper p-1 grow text-yellow-500">
-
-      <img :src="encodeURI(audioStore.bgimg + '?h=150&w=400')" class="absolute top-0 left-0 w-full h-full"
+    <div class="relative wrapper p-1 grow action">
+      <img :src="encodeURI(audioStore.bgimg + '?h=150&w=400')" class="w-full absolute top-0 left-0 right-0 h-full"
         :style="{ 'filter': 'blur(2px)', 'opacity': '0.5' }" alt="Background Image" />
 
-      <nav class="relative flex justify-around my-2 z-10">
+      <nav class="relative flex-col z-10">
 
-        <div class=" grow flex flex-col justify-around text-3xl text-center" to="/menu">
-          <i @click="audioStore.toggleShuffle" :class="[audioStore.shuffle ? 'text-pink-500' : '']"
-            class="fa-solid fa-shuffle"></i>
+        <div class="flex justify-between">
+          <RouterLink to="/nowplaying" class="grow overflow-hidden">
+            <p class="relative  text-sm text-left font-bold info overflow-hidden text-ellipsis text-nowrap">
+              {{ audioStore.title }}
+            </p>
+
+            <p class="relative text-sm text-left font-bold info text-nowrap">
+              {{ audioStore.artist }}
+            </p>
+          </RouterLink>
+          <div class="flex flex-col text-center justify-center px-2" @click="audioStore.togglePlay">
+            <i :class="[audioStore.isPlaying ? ' fa-circle-play' : 'fa-circle-pause']" class="text-3xl fa-regular"></i>
+          </div>
+
         </div>
 
-        <div>
-          <div class="flex-col grow text-center justify-center hover:text-pink-500" @click="audioStore.togglePlay">
-            <i :class="[audioStore.isPlaying ? ' fa-circle-play' : 'fa-circle-pause']" class="text-7xl fa-regular"></i>
+        <div class="w-full bg-gray-200 rounded-full h-0.5 dark:bg-gray-700">
+          <div class="bg-blue-600 h-0.5 rounded-full dark:bg-yellow-500"
+            :style="{ 'width': audioStore.percentDone + '%' }">
           </div>
         </div>
 
-        <div class="grow flex flex-col justify-around text-3xl text-center hover:text-pink-500" to="/menu">
-          <i @click="audioStore.toggleRepeat" :class="[audioStore.repeat ? 'text-pink-500' : '']"
-            class="fa-solid fa-repeat "></i>
-        </div>
-
       </nav>
-      <RouterLink class="absolute right-2 bottom-2" to="/nowplaying">
-        <i class="fa-solid fa-arrow-up"></i>
-      </RouterLink>
-
-      <marquee class="relative mx-16 text-2xl font-bold text-pink-500" behavior="scroll">{{ audioStore.artist }} - {{
-        audioStore.title
-        }}</marquee>
       <audio controls class="hidden" id="audio-player" :src="audioStore.songSrc"
         @timeupdate="audioStore.update"></audio>
     </div>

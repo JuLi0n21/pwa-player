@@ -90,9 +90,8 @@ app.MapGet("/api/v1/audio/{*fileName}", async (string fileName, HttpContext cont
     var decodedFileName = Uri.UnescapeDataString(fileName);
     var filePath = Path.Combine(Osudb.osufolder, "Songs", decodedFileName);
 
-    if (!System.IO.File.Exists(filePath))
+    if (!File.Exists(filePath))
     {
-        Console.WriteLine($"Not Found: {filePath}");
         return Results.NotFound();
     }
 
@@ -125,11 +124,15 @@ app.MapGet("/api/v1/search/artist", async (string? q, int? limit, int? offset) =
 
 app.MapGet("/api/v1/search/songs", async (string? q, int? limit, int? offset) =>
 {
+    var limitv = limit ?? 100;
+    var offsetv = offset ?? 0;
     return Results.Ok();
 });
 
 app.MapGet("/api/v1/search/collections", async (string? q, int? limit, int? offset) =>
 {
+    var limitv = limit ?? 100;
+    var offsetv = offset ?? 0;
     return Results.Ok();
 });
 
@@ -138,10 +141,9 @@ app.MapGet("/api/v1/images/{*filename}", async (string filename, int? h, int? w)
     var decodedFileName = Uri.UnescapeDataString(filename);
     var filePath = Path.Combine(Osudb.osufolder, "Songs", decodedFileName);
 
-    if (!System.IO.File.Exists(filePath))
+    if (!File.Exists(filePath))
     {
-        Console.WriteLine($"Not Found: {filePath}");
-        return Results.NotFound();
+        filePath = "default-bg.png";
     }
 
     var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();

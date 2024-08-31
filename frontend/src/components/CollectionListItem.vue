@@ -5,10 +5,10 @@ import { useUserStore } from '@/stores/userStore';
 import { useAudioStore } from '@/stores/audioStore';
 const userStore = useUserStore();
 const audioStore = useAudioStore();
-const props = defineProps<{ collection: CollectionPreview}>();
+const props = defineProps<{ collection: CollectionPreview }>();
 
 
-function hi(){
+function hi() {
 }
 
 </script>
@@ -16,11 +16,11 @@ function hi(){
 <template>
 
   <RouterLink @click.navtive="hi" :to="'/collection/' + props.collection.index">
-    <div class=" border border-pink-500 rounded-lg flex">
+    <div class=" border bordercolor rounded-lg flex">
       <img class="h-20 w-20 m-2 rounded-lg" :src="props.collection.previewimage" loading="lazy" />
       <div class="flex flex-col">
-        <h3 class="self-start text-yellow-500">{{ props.collection.name }}</h3>
-        <h5 class="self-start text-yellow-500 text-sm">{{ props.collection.length }} Songs </h5>
+        <h3 class="self-start info">{{ props.collection.name }}</h3>
+        <h5 class="self-start info text-sm">{{ props.collection.length }} Songs </h5>
       </div>
     </div>
   </RouterLink>

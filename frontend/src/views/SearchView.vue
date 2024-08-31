@@ -15,12 +15,11 @@ const activesongs = ref<Song[]>([]);
 const songs = ref<Song[]>([]);
 const artists = ref<string[]>([]);
 const showSearch = ref(false);
-
-
+const searchTerm = ref('');
 
 onMounted(async () => {
 
-await loadartistifexist();
+  await loadartistifexist();
 
   const container = document.querySelector('.search') as HTMLInputElement;
 
@@ -29,31 +28,43 @@ await loadartistifexist();
       showSearch.value = true;
 
       const target = event.target as HTMLInputElement;
-        if(target.value != undefined && target.value != ""){
-         const data = await userStore.fetchActiveSearch(target.value)
-         router.push({ query: {s: target.value } });
+      if (target.value != undefined && target.value != "") {
+        const data = await userStore.fetchActiveSearch(target.value)
+        router.push({ query: { s: target.value } });
+        searchTerm.value = target.value
 
-         data.songs.forEach(song => {
-            song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-            song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
-          });
-          
-          activesongs.value = data.songs;
-          audioStore.setCollection(data.songs)
-          artists.value = data.artist;
+        data.songs.forEach(song => {
+          song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
+          song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+        });
+
+        activesongs.value = data.songs;
+        audioStore.setCollection(data.songs)
+        artists.value = data.artist;
       } else {
-          activesongs.value = [];
-          artists.value = [];
-          showSearch.value = false;
-         
-      }
-    }
-    )}
-      const s =  route.query.s as string;
-      if(s){container.value = s; container.dispatchEvent(new Event('input'))}
-  });
+        activesongs.value = [];
+        artists.value = [];
+        showSearch.value = false;
+        router.push({ query: { s: target.value } });
 
-async function loadartistifexist(){
+      }
+    });
+    container.addEventListener('enter', async (event: Event) => {
+
+      const target = event.target as HTMLInputElement;
+      if (target.value != undefined && target.value != "") {
+        showSearch.value = false
+        const data = await userStore.fetchActiveSearch(target.value)
+
+      }
+    })
+
+  }
+  const s = route.query.s as string;
+  if (s) { container.value = s; container.dispatchEvent(new Event('input')) }
+});
+
+async function loadartistifexist() {
   const query = route.query.a as string;
   if (query) {
     showSearch.value = false;
@@ -62,16 +73,25 @@ async function loadartistifexist(){
     console.log(data);
 
     data.forEach(song => {
-            song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-            song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
-          });
+      song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
+      song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+    });
 
     songs.value = data;
   }
 }
 
+function emptySearch() {
+  const container = document.querySelector('.search') as HTMLInputElement;
+
+  container.value = "";
+  container.dispatchEvent(new Event('input'))
+  songs.value = [];
+  artists.value = [];
+
+}
 watch(() => route.query.a, async (newQuery) => {
-  
+
   await loadartistifexist();
 
 });
@@ -90,12 +110,18 @@ watch(() => route.query.a, async (newQuery) => {
     </div>
   </header>
   <main class="flex flex-col flex-1 flex-col w-full h-full overflow-scroll">
-    <input placeholder="Type to Search..." class="flex-1 max-h-12 search border border-pink-500 accent-pink-800 bg-yellow-300 bg-opacity-20 rounded-lg m-2 p-2" />
+    <input placeholder="Type to Search..."
+      class="flex-1 max-h-12 search border bordercolor accent-pink-800 bg-yellow-300 bg-opacity-20 rounded-lg m-2 p-2" />
+
+    <div class="absolute h-16 right-4 flex flex-col justify-center">
+      <i @click="emptySearch" class="far fa-times-circle opacity-50"></i>
+    </div>
+
     <div class="relative flex flex-col w-full h-full overflow-scroll">
-      <div v-if="showSearch" class="absolute w-full text-center search-recommendations  z -20">
-         <ActiveSearchList :songs="activesongs" :artist="artists"/>
-      </div>    
-    <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
+      <div v-if="showSearch" class="absolute w-full text-center search-recommendations  z-20">
+        <ActiveSearchList :songs="activesongs" :artist="artists" :search="searchTerm" />
+      </div>
+      <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
     </div>
   </main>
 </template>

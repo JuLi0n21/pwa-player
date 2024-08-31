@@ -32,11 +32,24 @@ watch(route, async (to) => {
 
 })
 
+function loadColors() {
+
+  document.documentElement.style.setProperty('--background-color', localStorage.getItem('bgColor') || '#1c1719');
+  document.documentElement.style.setProperty('--action-color', localStorage.getItem('actionColor') || '#eab308');
+
+  document.documentElement.style.setProperty('--information-color', localStorage.getItem('infoColor') || '#ec4899');
+  document.documentElement.style.setProperty('--border-color', localStorage.getItem('borderColor') || '#ec4899');
+
+  console.log(localStorage.getItem('bgColor'));
+}
+
+loadColors();
+
 </script>
 
 <template>
 
-  <contentw class="flex flex-col h-screen max-h-screen wrapper text-pink-500 text-xl">
+  <contentw class="flex flex-col h-screen max-h-screen wrapper info text-xl">
 
     <RouterView />
 
