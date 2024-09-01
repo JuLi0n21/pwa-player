@@ -34,7 +34,7 @@ func CookieMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		cookie, err := r.Cookie("session_cookie")
-		if err != nil || cookie.Value == "" {
+		if err != nil || cookie.Value == "" || cookie == nil {
 
 			newCookie := &http.Cookie{
 				Name:     "session_cookie",
@@ -46,6 +46,7 @@ func CookieMiddleware(next http.Handler) http.Handler {
 			}
 
 			http.SetCookie(w, newCookie)
+			cookie = newCookie
 		}
 
 		ctx := context.WithValue(r.Context(), "cookie", cookie.Value)

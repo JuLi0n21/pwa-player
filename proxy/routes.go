@@ -4,25 +4,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func run() error {
+
+	port := os.Getenv("PORT")
 	mux := http.NewServeMux()
 
 	mux.Handle("/me", AuthMiddleware(http.HandlerFunc(MeHandler)))
 	mux.Handle("/login", http.HandlerFunc(LoginRedirect))
 
-	fmt.Println("Starting Server on :42000")
+	mux.Handle("/oauth/code", http.HandlerFunc(Oauth))
+
+	fmt.Println("Starting Server on", port)
 
 	//global middleware
 	handler := CookieMiddleware(mux)
 
-	return http.ListenAndServe(":42000", handler)
+	return http.ListenAndServe(port, handler)
 }
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := r.Context().Value("user").(*User)
+
+	//mask token...
+	user.Token = Token{}
 
 	w.Header().Set("Content-Type", "application/Json")
 

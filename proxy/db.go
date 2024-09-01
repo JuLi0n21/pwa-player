@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -9,20 +10,24 @@ import (
 )
 
 type User struct {
-	UserID    int
-	Name      string
-	AvatarUrl string
-	EndPoint  string
-	Token
+	UserID    int    `json:"id"`
+	Name      string `json:"name"`
+	AvatarUrl string `json:"avatar_url"`
+	EndPoint  string `json:"endpoint"`
+	Token     `json:"-"`
 }
 
 type Token struct {
-	AuthToken    string
-	RefreshToken string
-	ExpireDate   time.Time
+	AccessToken  string    `json:"-"`
+	RefreshToken string    `json:"-"`
+	ExpireDate   time.Time `json:"-"`
 }
 
 var db *sql.DB
+
+const (
+	layout = "2006-01-02 15:04:05.999999999-07:00"
+)
 
 func InitDB() {
 	var err error
@@ -38,7 +43,7 @@ func InitDB() {
 		name TEXT NOT NULL,
 		endpoint TEXT,
 		avatar_url TEXT,
-		auth_token TEXT,
+		access_token TEXT,
 		refresh_token TEXT,
 		expire_date TEXT
 	);`
@@ -53,7 +58,7 @@ func InitDB() {
 	CREATE TABLE IF NOT EXISTS cookiejar (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
-		cookie TEXT NOT NULL,
+		cookie TEXT NOT NULL UNIQUE,
 		FOREIGN KEY(user_id) REFERENCES users(id) On DELETE CASCADE
 	);`
 
@@ -65,20 +70,44 @@ func InitDB() {
 }
 
 func GetUserByCookie(cookie string) (*User, error) {
+
 	query := `
-	SELECT users.id, users.name, users.endpoint, users.avatar_url, users.auth_token, users.refresh_token, users.expire_date
+	SELECT users.id, users.name, users.endpoint, users.avatar_url, users.access_token, users.refresh_token, users.expire_date
 	FROM users users
-	JOIN cookiejar cookie ON users.id = cookie.user_id
-	WHERE cookie.cookie = ?`
+	JOIN cookiejar co ON users.id = co.user_id
+	WHERE co.cookie = ?`
 	row := db.QueryRow(query, cookie)
 
 	var user User
-	err := row.Scan(&user.UserID, &user.Name, &user.EndPoint, &user.AvatarUrl, &user.AuthToken, &user.RefreshToken, &user.ExpireDate)
+	var ExpireStr string
+	err := row.Scan(&user.UserID, &user.Name, &user.EndPoint, &user.AvatarUrl, &user.AccessToken, &user.RefreshToken, &ExpireStr)
 	if err != nil {
+		fmt.Println(err)
+		return &User{}, err
+	}
+
+	user.ExpireDate, err = time.Parse(layout, ExpireStr)
+	if err != nil {
+		fmt.Println(err)
 		return &User{}, err
 	}
 
 	return &user, nil
+}
+
+func SaveUser(user User) error {
+	query := `INSERT INTO users (id, name, endpoint, avatar_url, access_token, refresh_token, expire_date) VALUES (?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET 
+			name = excluded.name,
+			endpoint = excluded.endpoint,
+			avatar_url = excluded.avatar_url,
+			access_token = excluded.access_token,
+			refresh_token = excluded.refresh_token,
+			expire_date = excluded.expire_date;
+	`
+
+	_, err := db.Exec(query, user.UserID, user.Name, user.EndPoint, user.AvatarUrl, user.AccessToken, user.RefreshToken, user.ExpireDate)
+	return err
 }
 
 func SaveCookie(userID int, cookie string) error {
@@ -89,7 +118,7 @@ func SaveCookie(userID int, cookie string) error {
 
 func UpdateUserTokens(userID int, auth Token) error {
 	query := "UPDATE users SET auth_token = ?, refresh_token = ?, expire_date = ? WHERE id = ?"
-	_, err := db.Exec(query, auth.AuthToken, auth.RefreshToken, auth.ExpireDate, userID)
+	_, err := db.Exec(query, auth.AccessToken, auth.RefreshToken, auth.ExpireDate, userID)
 	return err
 }
 
