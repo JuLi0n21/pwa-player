@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	if ok := godotenv.Load(".env"); ok != nil {
+	if ok := godotenv.Load("dev.env"); ok != nil {
 		panic(".env not found")
 	}
 
