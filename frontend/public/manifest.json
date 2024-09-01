@@ -1,6 +1,6 @@
 {
-  "name": "My Vue 3 App",
-  "short_name": "My App",
+  "name": "osu! music player",
+  "short_name": "music player",
   "icons": [
     {
       "src": "img/icons/android-chrome-192x192.png",
@@ -13,8 +13,8 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "/menu",
   "background_color": "#ffffff",
   "display": "standalone",
-  "theme_color": "#4DBA87"
+  "theme_color": "#1c1719"
 }

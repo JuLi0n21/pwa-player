@@ -69,6 +69,14 @@ function reset() {
     <h1> Meeeeee </h1>
     <input @change="update" type="text" id="url-input" :value="userStore.baseUrl" />
     <br>
+    <div class="flex p-5 justify-between">
+      <img :src="'https://a.ppy.sh/14100399'" class="w-1/3">
+      <div>
+        <p>User: {{ 'JuLi0n_' }}</p>
+        <p>Api: Not Connected</p>
+        <p>Sharing: <button class="border bordercolor rounded-lg p-0.5"> Off </button></p>
+      </div>
+    </div>
 
     <div class="flex flex-col w-full justify-around p-10">
       <div class="flex flex-1 justify-between">
