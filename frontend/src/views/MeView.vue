@@ -12,6 +12,8 @@ const actionColor = ref('');
 const infoColor = ref('');
 const borderColor = ref('');
 
+const loginStatus = ref('Login');
+
 function update() {
   var input = document.getElementById("url-input") as HTMLAudioElement;
   console.log(input.value)
@@ -32,6 +34,24 @@ function save(bg: string | null, main: string | null, info: string | null, borde
   localStorage.setItem('borderColor', border ?? borderColor.value);
 
   console.log("bg", bgColor.value, "action:", actionColor.value, "info", infoColor.value, "border", borderColor.value)
+}
+
+async function getMe() {
+
+  const data = await userStore.fetchMe() as Me;
+  if (data.redirected == true) {
+    loginStatus.value = "waiting for login, click to refresh!"
+    console.log("redirect detected");
+  }
+
+  console.log(data)
+  if (data.id === null || data.id === undefined || Object.keys(data).length === 0) {
+    return
+  }
+
+  console.log("active user: ", data.name)
+  userStore.setUser(data);
+
 }
 
 onMounted(() => {
@@ -69,12 +89,17 @@ function reset() {
     <h1> Meeeeee </h1>
     <input @change="update" type="text" id="url-input" :value="userStore.baseUrl" />
     <br>
-    <div class="flex p-5 justify-between">
-      <img :src="'https://a.ppy.sh/14100399'" class="w-1/3">
+    <button v-if="!userStore.User" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
+    <div v-if="userStore.User" class="flex p-5 justify-between">
+      <img :src="userStore.User.avatar_url" class="w-1/3">
       <div>
-        <p>User: {{ 'JuLi0n_' }}</p>
-        <p>Api: Not Connected</p>
-        <p>Sharing: <button class="border bordercolor rounded-lg p-0.5"> Off </button></p>
+        <p>{{ userStore.User.name }}</p>
+        <p>{{ userStore.User.endpoint == "" ? 'Not Connected' : 'Connected' }}</p>
+        <p>Sharing: <button @click="share" class="border bordercolor rounded-lg p-0.5">{{ userStore.User.share
+            }}</button></p>
+        <button @click="getMe" class="border bordercolor rounded-lg p-0.5"> Refresh
+        </button>
+
       </div>
     </div>
 

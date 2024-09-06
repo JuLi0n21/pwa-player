@@ -1,10 +1,27 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { Song, CollectionPreview } from '@/script/types';
+import type { Song, CollectionPreview, Me } from '@/script/types';
 
 export const useUserStore = defineStore('userStore', () => {
   const userId = ref(null)
   const baseUrl = ref('https://service.illegalesachen.download/')
+  const proxyUrl = ref('https://proxy.illegalesachen.download/')
+
+  const User = ref<Me>(null)
+
+  function saveUser(user: Me) {
+    localStorage.setItem('activeUser', JSON.stringify(user));
+  }
+
+  function loadUser(): Me | null {
+    const user = localStorage.getItem('activeUser');
+    return user ? JSON.parse(user) : null;
+  }
+
+  function setUser(user: Me) {
+    User.value = user;
+    saveUser(user)
+  }
 
   async function fetchSong(hash: string): Promise<Song> {
     try {
@@ -30,7 +47,7 @@ export const useUserStore = defineStore('userStore', () => {
     }
   }
 
-  async function fetchWithCache<T>(cacheKey: string, url: string, cacheDuration: number = 24 * 60 * 60 * 1000): Promise<T> {
+  async function fetchWithCache<T>(cacheKey: string, url: string, cacheDuration: number = 24 * 60 * 60 * 1): Promise<T> {
     const cacheTimestampKey = `${cacheKey}_timestamp`;
 
     const cachedData = localStorage.getItem(cacheKey);
@@ -96,5 +113,35 @@ export const useUserStore = defineStore('userStore', () => {
     return fetchWithCache<Song[]>(cacheKey, url);
   }
 
-  return { fetchSong, fetchActiveSearch, fetchSearchArtist, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, userId, baseUrl }
+  async function fetchMe(): Promise<Me | {}> {
+    const url = `${proxyUrl.value}me`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      console.log(response);
+
+      if (response.redirected) {
+        window.open(response.url, '_blank');
+        return { "redirected": true };
+      }
+
+      if (!response.ok) {
+        console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
+        return { id: -1 } as Me;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      return {} as Me;
+    }
+  }
+
+  setUser(loadUser());
+
+  return { fetchSong, fetchActiveSearch, fetchSearchArtist, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, fetchMe, userId, baseUrl, proxyUrl, User, setUser }
 })

@@ -14,6 +14,7 @@ type User struct {
 	Name      string `json:"name"`
 	AvatarUrl string `json:"avatar_url"`
 	EndPoint  string `json:"endpoint"`
+	Share     bool   `json:"share"`
 	Token     `json:"-"`
 }
 
@@ -125,5 +126,11 @@ func UpdateUserTokens(userID int, auth Token) error {
 func UpdateUserEndPoint(userID int, endPoint string) error {
 	query := "UPDATE users SET endpoint = ? WHERE id = ?"
 	_, err := db.Exec(query, endPoint, userID)
+	return err
+}
+
+func UpdateUserShare(userID int, sharing bool) error {
+	query := "UPDATE users SET sharing = ? WHERE id = ?"
+	_, err := db.Exec(query, sharing, userID)
 	return err
 }

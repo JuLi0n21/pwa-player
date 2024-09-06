@@ -86,8 +86,7 @@ func (c *OsuApiClient) sendRequest(req *http.Request, v interface{}) error {
 	return nil
 }
 
-func LoginRedirect(w http.ResponseWriter, r *http.Request) {
-
+func LoginMiddlePage(w http.ResponseWriter, r *http.Request) {
 	cookie, ok := r.Context().Value("cookie").(string)
 
 	if !ok || cookie == "" {
@@ -98,13 +97,32 @@ func LoginRedirect(w http.ResponseWriter, r *http.Request) {
 
 	var clientid = os.Getenv("CLIENT_ID")
 	var redirect_uri = os.Getenv("REDIRECT_URI") + "/oauth/code"
-	http.Redirect(w, r,
-		fmt.Sprintf("https://osu.ppy.sh/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
-			clientid,
-			redirect_uri,
-			strings.Join(scopes, " "),
-			cookie),
-		http.StatusTemporaryRedirect)
+
+	html := `
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Login Required</title>
+		</head>
+		<body>
+			<p>Redirecting...</p>
+			<a href="%s">Click here if ur not being Redirected!</a>
+		<script>
+			window.location.href = "%s";
+		</script>
+		</body>
+		</html>
+		`
+
+	loginURL := fmt.Sprintf("https://osu.ppy.sh/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
+		clientid,
+		redirect_uri,
+		strings.Join(scopes, " "),
+		cookie)
+	fmt.Fprintf(w, html, loginURL, loginURL)
+	return
 }
 
 func Oauth(w http.ResponseWriter, r *http.Request) {
@@ -204,13 +222,41 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 	user.UserID = apiuser.ID
 	user.Name = apiuser.Username
 	user.AvatarUrl = apiuser.AvatarURL
+	user.Share = false
 
 	SaveCookie(user.UserID, cookie)
 	if err = SaveUser(user); err != nil {
 		fmt.Println(err)
 	}
 
-	JSONResponse(w, http.StatusCreated, user)
+	var html = fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<title>Login Success</title>
+		<body>
+		
+		<input type="password" value="%s" id="myInput" disabled>
+		<button onclick="copyToClipboard()">Copy Text</button>
+
+			<script>
+			function copyToClipboard() {
+				var copyText = document.getElementById("myInput");
+				copyText.select();
+				copyText.setSelectionRange(0, 99999); // For mobile devices
+				  navigator.clipboard.writeText(copyText.value);
+			}
+
+			window.close(); // Close the window after copy
+			</script>
+		</head>
+		</html>
+	`, cookie)
+
+	fmt.Fprint(w, html)
+	return
+
 }
 
 type AuthToken struct {

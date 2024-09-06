@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using shitweb;
+using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.Net.Http;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,18 +31,24 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 app.UseCors("AllowAll");
 
+var apiClient = new ApiClient();
+
+
 app.MapGet("/ping", () => "pong");
 
 
-// Define the API routes
+app.MapGet("/login", () => {
+    return Results.Redirect("https://proxy.illegalesachen.download/login");
+});
+
 app.MapGet("/api/v1/songs/{hash}", (string hash) =>
-    {
+{
 
-        return Results.Ok(new { hash });
-    });
+    return Results.Ok(new { hash });
+});
 
-app.MapGet("/api/v1/songs/recent", (int? limit, int? offset) =>
-    {
+app.MapGet("/api/v1/songs/recent", (HttpContext httpContext, int? limit, int? offset) =>
+{
         var limitValue = limit ?? 100; // default to 10 if not provided
         var offsetValue = offset ?? 0; // default to 0 if not provided
 
@@ -225,4 +237,63 @@ static ImageFormat GetImageFormat(string extension)
 }
 
 Osudb.Instance.ToString();
+startCloudflared();
+
+Task.Run(() =>
+{
+    Thread.Sleep(500);
+    if (!apiClient.LoadCookies())
+    {
+        Console.WriteLine("Please visit this link and paste the Value back into here: ");
+
+        var cookie = Console.ReadLine();
+
+        apiClient.SaveCookies(cookie);
+    }
+
+    Console.WriteLine("Ur Osu songs should now be available, please delete the cookies.json if it doesnt show up and try again.");
+});
+
+await apiClient.InitializeAsync();
 app.Run();
+
+async Task startCloudflared() {
+   
+    var process = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            FileName = "cloudflared",
+            Arguments = "tunnel --url http://localhost:5153",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        }
+    };
+
+    process.ErrorDataReceived += (sender, e) => {
+        if (!string.IsNullOrEmpty(e.Data))
+        {
+            ParseForUrls(e.Data);
+        }
+    };
+
+    process.Start();
+
+    process.BeginErrorReadLine();
+
+    await Task.Run(() => process.WaitForExit());
+}
+
+void ParseForUrls(string data)
+{
+    var urlRegex = new Regex(@"https?://[^\s]*\.trycloudflare\.com");
+    var matches = urlRegex.Matches(data);
+
+    foreach (Match match in matches)
+    {
+        Console.WriteLine($"Login here if not done already: {match.Value}/login");
+        apiClient.UpdateSettingsAsync(match.Value);
+    }
+}
