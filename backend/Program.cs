@@ -43,7 +43,6 @@ app.MapGet("/login", () => {
 
 app.MapGet("/api/v1/songs/{hash}", (string hash) =>
 {
-
     return Results.Ok(new { hash });
 });
 
