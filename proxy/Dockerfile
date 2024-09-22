@@ -13,7 +13,7 @@ FROM ubuntu:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/dev.env .
+COPY --from=builder /app/*.env .
 
 EXPOSE 80
 
