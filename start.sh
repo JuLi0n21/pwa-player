@@ -23,14 +23,14 @@ docker build -t "$BACKEND_IMAGE" "$REPO_DIR/proxy" # Assuming proxy is the backe
 echo "Building frontend Docker image..."
 docker build -t "$FRONTEND_IMAGE" "$REPO_DIR/frontend" # Assuming frontend is the frontend directory
 
-if [ "$(docker ps -q -f name=$BACKEND_CONTAINER)" ]; then
+if [ "$(docker ps -aq -f name=$BACKEND_CONTAINER)" ]; then
   echo "Stopping old backend container..."
   docker stop "$BACKEND_CONTAINER"
   echo "Removing old backend container..."
   docker rm "$BACKEND_CONTAINER"
 fi
 
-if [ "$(docker ps -q -f name=$FRONTEND_CONTAINER)" ]; then
+if [ "$(docker ps -aq -f name=$FRONTEND_CONTAINER)" ]; then
   echo "Stopping old frontend container..."
   docker stop "$FRONTEND_CONTAINER"
   echo "Removing old frontend container..."
@@ -38,7 +38,7 @@ if [ "$(docker ps -q -f name=$FRONTEND_CONTAINER)" ]; then
 fi
 
 echo "Running new backend container..."
-docker run -d -p "$BACKEND_PORT":80 --name "$BACKEND_CONTAINER" "$BACKEND_IMAGE"
+docker run -d -p "$BACKEND_PORT":80 --name "$BACKEND_CONTAINER" -v "$REPO_DIR/data:/app/data" "$BACKEND_IMAGE"
 
 echo "Running new frontend container..."
 docker run -d -p "$FRONTEND_PORT":80 --name "$FRONTEND_CONTAINER" "$FRONTEND_IMAGE"

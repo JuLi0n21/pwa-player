@@ -32,7 +32,7 @@ const (
 
 func InitDB() {
 	var err error
-	db, err = sql.Open("sqlite3", "database.db")
+	db, err = sql.Open("sqlite3", "data/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}

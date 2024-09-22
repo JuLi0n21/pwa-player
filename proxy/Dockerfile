@@ -7,13 +7,13 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+RUN CGO_ENABLED=1 GOOS=linux go build -o main .
 
-FROM gcr.io/distroless/base-debian11
-
+FROM ubuntu:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/dev.env .
 
 EXPOSE 80
 
