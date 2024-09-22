@@ -18,6 +18,17 @@ export const useUserStore = defineStore('userStore', () => {
     return user ? JSON.parse(user) : null;
   }
 
+
+  function setBaseUrl(url: string) {
+    localStorage.setItem('baseUrl', url);
+    baseUrl.value = url;
+  }
+
+  function loadBaseUrl(): string | null {
+    const url = localStorage.getItem('baseUrl');
+    return url;
+  }
+
   function setUser(user: Me | null) {
     User.value = user;
     saveUser(user)
@@ -142,6 +153,7 @@ export const useUserStore = defineStore('userStore', () => {
   }
 
   setUser(loadUser());
+  baseUrl.value = loadBaseUrl();
 
-  return { fetchSong, fetchActiveSearch, fetchSearchArtist, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, fetchMe, userId, baseUrl, proxyUrl, User, setUser }
+  return { fetchSong, fetchActiveSearch, fetchSearchArtist, fetchCollections, fetchCollection, fetchRecent, fetchFavorites, fetchMe, userId, baseUrl, proxyUrl, User, setUser, setBaseUrl }
 })
