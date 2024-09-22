@@ -34,8 +34,8 @@ onMounted(async () => {
         searchTerm.value = target.value
 
         data.songs.forEach(song => {
-          song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-          song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+          song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
+          song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
         });
 
         activesongs.value = data.songs;
@@ -73,8 +73,8 @@ async function loadartistifexist() {
     console.log(data);
 
     data.forEach(song => {
-      song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-      song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+      song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
+      song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
     });
 
     songs.value = data;

@@ -17,7 +17,7 @@ const fetchCollections = async () => {
 
   const data = await userStore.fetchCollections(offset.value, limit.value);
   data.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}?h=80&w=80`;
+    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}?h=80&w=80`;
   });
 
   collections.value = [...collections.value, ...data];

@@ -19,8 +19,8 @@ onMounted(async () => {
   console.log(data)
 
   data.songs.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-    song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
+    song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
   });
 
   name.value = data.name;

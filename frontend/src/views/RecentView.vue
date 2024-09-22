@@ -26,8 +26,8 @@ const fetchRecent = async () => {
   const data = await userStore.fetchRecent(limit.value, offset.value);
 
   data.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}api/v1/images/${song.previewimage}`;
-    song.url = `${userStore.baseUrl}api/v1/audio/${song.url}`;
+    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
+    song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
   });
 
   offset.value += limit.value;
