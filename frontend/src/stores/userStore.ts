@@ -7,9 +7,9 @@ export const useUserStore = defineStore('userStore', () => {
   const baseUrl = ref('https://service.illegalesachen.download/')
   const proxyUrl = ref('https://proxy.illegalesachen.download/')
 
-  const User = ref<Me>(null)
+  const User = ref<Me | null>(null)
 
-  function saveUser(user: Me) {
+  function saveUser(user: Me | null) {
     localStorage.setItem('activeUser', JSON.stringify(user));
   }
 
@@ -18,7 +18,7 @@ export const useUserStore = defineStore('userStore', () => {
     return user ? JSON.parse(user) : null;
   }
 
-  function setUser(user: Me) {
+  function setUser(user: Me | null) {
     User.value = user;
     saveUser(user)
   }

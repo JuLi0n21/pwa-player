@@ -20,7 +20,7 @@ export const useAudioStore = defineStore('audioStore', () => {
   const repeat = ref(false);
 
   const activeCollection = ref<Song[]>([]);
-  const currentSong = ref<Song>(null);
+  const currentSong = ref<Song | null>(null);
 
   function saveSongToLocalStorage(song: Song) {
     localStorage.setItem('lastPlayedSong', JSON.stringify(song));

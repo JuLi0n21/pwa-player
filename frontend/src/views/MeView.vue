@@ -15,8 +15,7 @@ const borderColor = ref('');
 const loginStatus = ref('Login');
 
 function update() {
-  var input = document.getElementById("url-input") as HTMLAudioElement;
-  console.log(input.value)
+  var input = document.getElementById("url-input") as HTMLInputElement;
   userStore.baseUrl = input.value;
 
 }
