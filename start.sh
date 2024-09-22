@@ -6,8 +6,8 @@ BACKEND_IMAGE="proxy"
 FRONTEND_IMAGE="frontend"
 BACKEND_CONTAINER="proxy-container"
 FRONTEND_CONTAINER="frontend-container"
-BACKEND_PORT="5001"
-FRONTEND_PORT="5002"
+BACKEND_PORT="5002"
+FRONTEND_PORT="5001"
 
 if [ -d "$REPO_DIR/.git" ]; then
   echo "Pulling latest changes from $REPO_URL..."
@@ -38,9 +38,9 @@ if [ "$(docker ps -aq -f name=$FRONTEND_CONTAINER)" ]; then
 fi
 
 echo "Running new backend container..."
-docker run -d -p "$BACKEND_PORT":"$BACKEND_PORT" --name "$BACKEND_CONTAINER" -v "$REPO_DIR/data:/app/data" "$BACKEND_IMAGE"
+docker run -d -p "$BACKEND_PORT":80 --name "$BACKEND_CONTAINER" -v "$REPO_DIR/data:/app/data" "$BACKEND_IMAGE"
 
 echo "Running new frontend container..."
-docker run -d -p "$FRONTEND_PORT":"$FRONTEND_PORT" --name "$FRONTEND_CONTAINER" "$FRONTEND_IMAGE"
+docker run -d -p "$FRONTEND_PORT":80 --name "$FRONTEND_CONTAINER" "$FRONTEND_IMAGE"
 
 docker ps
