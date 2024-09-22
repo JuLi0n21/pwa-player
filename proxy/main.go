@@ -14,7 +14,7 @@ func main() {
 			panic(".env not found")
 		}
 	} else {
-		fmt.Println("Not Produktion Enviorment fallback to dev.env")
+		fmt.Println("Fallback to dev.env")
 		if ok := godotenv.Load("dev.env"); ok != nil {
 			panic("dev.env not found")
 		}

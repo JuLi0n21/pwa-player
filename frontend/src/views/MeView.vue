@@ -50,6 +50,7 @@ async function getMe() {
 
   console.log("active user: ", data.name)
   userStore.setUser(data);
+  userStore.baseUrl.value = data.endpoint;
 
 }
 

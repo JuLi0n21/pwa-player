@@ -100,7 +100,6 @@ func SaveUser(user User) error {
 	query := `INSERT INTO users (id, name, endpoint, avatar_url, access_token, refresh_token, expire_date) VALUES (?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET 
 			name = excluded.name,
-			endpoint = excluded.endpoint,
 			avatar_url = excluded.avatar_url,
 			access_token = excluded.access_token,
 			refresh_token = excluded.refresh_token,
