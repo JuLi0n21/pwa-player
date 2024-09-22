@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    image: proxy
+    build:
+      context: ./proxy
+    container_name: proxy-container
+    ports:
+      - "5002:80"
+    volumes:
+      - ./data:/app/data
+    restart: always
+    depends_on:
+      - frontend
+
+  frontend:
+    image: frontend
+    build:
+      context: ./frontend
+    container_name: frontend-container
+    ports:
+      - "5001:80"
+    restart: always
+
