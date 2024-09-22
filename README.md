@@ -16,5 +16,6 @@ Website to listen to ur beatmaps and Collections
 
 ### FAQ
 - Yes, ur pc needs to run while u want to listen
+- Hibernation tends to fuck cloudflared
 - How does it work -> [How it works](docs/README.md)
 - I dont want to use the website but my own -> hit me up ill help u set it up
