@@ -141,6 +141,7 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 
 	if state != cookie {
 
+		fmt.Println(state, cookie)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -159,6 +160,7 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest("POST", "https://osu.ppy.sh/oauth/token", bytes.NewBufferString(body.Encode()))
 	if err != nil {
+		fmt.Println("Error: ", err.Error())
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -172,18 +174,21 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 
 	res, err := httpclient.Do(req)
 	if err != nil {
+		fmt.Println("Error: ", err.Error())
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
+		fmt.Println("Error: ", err.Error())
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
+		fmt.Println("Error: ", err.Error())
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -193,6 +198,7 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(data, &authToken)
 	if err != nil {
 		fmt.Println(err)
+		fmt.Println("Error: ", err.Error())
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
