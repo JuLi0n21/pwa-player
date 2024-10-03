@@ -13,7 +13,7 @@ const headerStore = useHeaderStore();
 </script>
 
 <template>
-  <main class="flex-1 flex flex-col h-full overflow-scroll">
+  <main class="flex-1 flex flex-col h-full overflow-y-scroll">
     <header v-show="true">
       <div class="wrapper">
         <nav class="flex justify-start my-2 mx-1 space-x-1 overflow-x-scroll flex-nowrap text-nowrap">

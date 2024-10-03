@@ -4,6 +4,6 @@ import SongItem from '../components/SongItem.vue'
 
 <template>
   <main class="flex-1 flex-col overflow-scroll">
-
+    <p>Coming Soon...</p>
   </main>
 </template>

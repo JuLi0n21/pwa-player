@@ -1,12 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using OsuParsers.Beatmaps;
 using OsuParsers.Database;
-using OsuParsers.Database.Objects;
 using shitweb;
-using System.Collections;
-using System.Net;
 using System.Text.RegularExpressions;
 
 public class Osudb

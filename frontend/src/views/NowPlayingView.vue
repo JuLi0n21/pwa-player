@@ -32,7 +32,7 @@ const audioStore = useAudioStore();
       <div class="h-1/3 flex flex-col justify-center">
         <div class="flex-1"></div>
         <div>
-          <div class="flex w-screen justify-around">
+          <div class="flex w-full justify-around">
             <i class="fa-solid fa-backward-step text-5xl self-center" @click="audioStore.togglePrev"></i>
             <i :class="[audioStore.isPlaying ? 'fa-circle-play' : 'fa-circle-pause']" class="fa-regular text-7xl "
               @click="audioStore.togglePlay"></i>
@@ -43,7 +43,7 @@ const audioStore = useAudioStore();
           <i @click="audioStore.toggleShuffle" :class="[audioStore.shuffle ? 'info' : '']"
             class="fa-solid fa-shuffle"></i>
 
-          <div class="m-4 info flex-1 overflow-idden">
+          <div class="m-4 info flex-1 overflow-hidden">
             <p>{{ audioStore.title }}</p>
             <RouterLink :to="'search?a=' + audioStore.artist">
 
