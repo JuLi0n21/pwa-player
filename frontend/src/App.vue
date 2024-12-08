@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import NowPlaying from './components/NowPlaying.vue'
-import NowPlayingView from './views/NowplayingView.vue'
-import MenuView from './views/MenuView.vue'
-import Footer from './components/Footer.vue'
+import NowPlaying from '@/components/NowPlaying.vue'
+import NowPlayingView from '@/views/NowPlayingView.vue'
+import MenuView from '@/views/MenuView.vue'
+import Footer from '@/components/Footer.vue'
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { defineStore } from 'pinia'

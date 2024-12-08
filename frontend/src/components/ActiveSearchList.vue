@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { updateLanguageServiceSourceFile } from 'typescript';
 import type { Song, CollectionPreview } from '../script/types'
 import { useAudioStore } from '@/stores/audioStore';
 import { ref } from 'vue';
