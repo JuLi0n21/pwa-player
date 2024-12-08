@@ -31,7 +31,7 @@ type OsuApiClient struct {
 func NewOsuApiClient(user User) (*OsuApiClient, error) {
 
 	if user.Token == (Token{}) {
-		return nil, errors.New("No Valid Credentials")
+		return nil, errors.New("no valid credentials")
 	}
 
 	if time.Now().After(user.ExpireDate) {
