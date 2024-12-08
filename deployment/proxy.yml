@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: osu-music
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: proxy-container
+        image: proxy
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: proxy-data
+          mountPath: /app/data
+      volumes:
+      - name: proxy-data
+        persistentVolumeClaim:
+          claimName: proxy-data-pvc

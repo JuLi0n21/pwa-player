@@ -1,0 +1,45 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'proxy/**'
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'proxy/**'
+      - 'frontend/**'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Proxy Docker image
+          run: |
+            docker build -t juli0n21/proxy-container:latest -t juli0n21/proxy-container:${{ github.sha }} .
+
+      - name: Build Frontend Docker image
+          run: |
+            docker build -t juli0n21/frontend-container:latest -t juli0n21/frontend-container:${{ github.sha }} .
+
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+
+      - name: Push Docker image
+        run: |
+          docker push juli0n21/proxy-container:${{ github.sha }}
+          docker push juli0n21/proxy-container:latest
+          docker push juli0n21/frontend-container:${{ github.sha }}
+          docker push juli0n21/frontend-container:latest
