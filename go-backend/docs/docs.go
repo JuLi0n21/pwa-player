@@ -658,10 +658,6 @@ const docTemplate = `{
                 "total_time": {
                     "type": "integer",
                     "example": 240
-                },
-                "url": {
-                    "type": "string",
-                    "example": "https://osu.ppy.sh/beatmaps/123456"
                 }
             }
         }

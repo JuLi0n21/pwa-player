@@ -58,9 +58,6 @@ definitions:
       total_time:
         example: 240
         type: integer
-      url:
-        example: https://osu.ppy.sh/beatmaps/123456
-        type: string
     type: object
 host: localhost:8080
 info:
