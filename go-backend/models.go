@@ -1,21 +1,19 @@
 package main
 
-import "time"
-
 // Song represents a song entity
 // @Description Song represents a song with metadata
 type Song struct {
-	BeatmapID int           `json:"beatmap_id" example:"123456"`
-	MD5Hash   string        `json:"md5_hash" example:"abcd1234efgh5678"`
-	Title     string        `json:"title" example:"Shape of You"`
-	Artist    string        `json:"artist" example:"Ed Sheeran"`
-	Creator   string        `json:"creator" example:"JohnDoe"`
-	Folder    string        `json:"folder" example:"osu/Songs/123456"`
-	File      string        `json:"file" example:"beatmap.osu"`
-	Audio     string        `json:"audio" example:"audio.mp3"`
-	TotalTime time.Duration `json:"total_time" example:"240"`
-	Url       string        `json:"url" example:"https://osu.ppy.sh/beatmaps/123456"`
-	Image     string        `json:"image" example:"cover.jpg"`
+	BeatmapID int    `json:"beatmap_id" example:"123456"`
+	MD5Hash   string `json:"md5_hash" example:"abcd1234efgh5678"`
+	Title     string `json:"title" example:"Shape of You"`
+	Artist    string `json:"artist" example:"Ed Sheeran"`
+	Creator   string `json:"creator" example:"JohnDoe"`
+	Folder    string `json:"folder" example:"osu/Songs/123456"`
+	File      string `json:"file" example:"beatmap.osu"`
+	Audio     string `json:"audio" example:"audio.mp3"`
+	TotalTime int64  `json:"total_time" example:"240"`
+	Url       string `json:"url" example:"https://osu.ppy.sh/beatmaps/123456"`
+	Image     string `json:"image" example:"cover.jpg"`
 }
 
 // CollectionPreview represents a preview of a song collection

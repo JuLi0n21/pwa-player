@@ -36,7 +36,6 @@ func main() {
 	s := &Server{
 		Port:   ":8080",
 		Db:     db,
-		OsuDb:  osuDb,
 		OsuDir: osuRoot,
 	}
 

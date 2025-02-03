@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/juli0n21/go-osu-parser/parser"
 	_ "modernc.org/sqlite"
@@ -168,7 +169,7 @@ func rebuildDb(db *sql.DB, osuDb *parser.OsuDB) error {
 	stmt = tx.Stmt(stmt)
 
 	for i, beatmap := range osuDb.Beatmaps {
-		fmt.Println(i, beatmap.Artist, beatmap.SongTitle, beatmap.MD5Hash)
+		//fmt.Println(i, beatmap.Artist, beatmap.SongTitle, beatmap.MD5Hash)
 		_, err := stmt.Exec(
 			beatmap.DifficultyID, beatmap.Artist, beatmap.ArtistUnicode,
 			beatmap.SongTitle, beatmap.SongTitleUnicode, beatmap.Creator,
@@ -294,7 +295,7 @@ func scanSongs(rows *sql.Rows) ([]Song, error) {
 			s.Image = fmt.Sprintf("404.png")
 		} else {
 			if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
-				s.Image = fmt.Sprintf("%s/%s", s.Folder, bm.Events[0].EventParams[0])
+				s.Image = fmt.Sprintf("%s/%s", s.Folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
 			}
 		}
 
@@ -319,7 +320,7 @@ func scanSong(row *sql.Row) (Song, error) {
 	}
 
 	if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
-		s.Image = fmt.Sprintf("%s/%s", s.Folder, bm.Events[0].EventParams[0])
+		s.Image = fmt.Sprintf("%s/%s", s.Folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
 	}
 
 	return s, nil
