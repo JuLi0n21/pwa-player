@@ -287,8 +287,6 @@ func scanSongs(rows *sql.Rows) ([]Song, error) {
 			return []Song{}, err
 		}
 
-		s.Url = fmt.Sprintf("%s/%s", s.Folder, s.Audio)
-
 		bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
 		if err != nil {
 			fmt.Println(err)
@@ -310,7 +308,6 @@ func scanSong(row *sql.Row) (Song, error) {
 	if err := row.Scan(&s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
 		return Song{}, err
 	}
-	s.Url = fmt.Sprintf("%s/%s", s.Folder, s.Audio)
 
 	bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
 	if err != nil {

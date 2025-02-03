@@ -12,7 +12,6 @@ type Song struct {
 	File      string `json:"file" example:"beatmap.osu"`
 	Audio     string `json:"audio" example:"audio.mp3"`
 	TotalTime int64  `json:"total_time" example:"240"`
-	Url       string `json:"url" example:"https://osu.ppy.sh/beatmaps/123456"`
 	Image     string `json:"image" example:"cover.jpg"`
 }
 
