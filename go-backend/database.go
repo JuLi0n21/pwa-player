@@ -14,7 +14,13 @@ import (
 
 var ErrBeatmapCountNotMatch = errors.New("beatmap count not matching")
 
-func initDB(connectionString string, osuDb *parser.OsuDB) (*sql.DB, error) {
+var osuDB *parser.OsuDB
+var fileName string
+
+func initDB(connectionString string, osuDb *parser.OsuDB, osuRoot string) (*sql.DB, error) {
+
+	osuDB = osuDb
+	fileName = osuRoot
 
 	dir := filepath.Dir(connectionString)
 
@@ -30,12 +36,17 @@ func initDB(connectionString string, osuDb *parser.OsuDB) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open SQLite database %s: %v", connectionString, err)
 	}
 
+	_, err = db.Exec("PRAGMA temp_store = MEMORY;")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if err = createDB(db); err != nil {
 		return nil, err
 	}
 
-	if err = checkhealth(db, osuDb); err != nil {
-		if err = rebuildDb(db, osuDb); err != nil {
+	if err = checkhealth(db, osuDB); err != nil {
+		if err = rebuildDb(db, osuDB); err != nil {
 			return nil, err
 		}
 	}
@@ -53,9 +64,9 @@ func createDB(db *sql.DB) error {
     TitleUnicode TEXT DEFAULT '???????',
     Creator TEXT DEFAULT '?????',
     Difficulty TEXT DEFAULT '1',
-    AudioFileName TEXT DEFAULT 'unknown.mp3',
+    Audio TEXT DEFAULT 'unknown.mp3',
     MD5Hash TEXT DEFAULT '00000000000000000000000000000000',
-    FileName TEXT DEFAULT 'unknown.osu',
+    File TEXT DEFAULT 'unknown.osu',
     RankedStatus TEXT DEFAULT Unknown,
     LastModifiedTime DATETIME DEFAULT '0001-01-01 00:00:00',
     TotalTime INTEGER DEFAULT 0,
@@ -64,11 +75,25 @@ func createDB(db *sql.DB) error {
     Source TEXT DEFAULT '',
     Tags TEXT DEFAULT '',
     LastPlayed DATETIME DEFAULT '0001-01-01 00:00:00',
-    FolderName TEXT DEFAULT 'Unknown Folder',
+    Folder TEXT DEFAULT 'Unknown Folder',
     UNIQUE (Artist, Title, MD5Hash, Difficulty)
 	);
 	`)
+	if err != nil {
+		return err
+	}
 
+	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_beatmap_md5hash ON Beatmap(MD5Hash);")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_beatmap_lastModifiedTime ON Beatmap(LastModifiedTime);")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_beatmap_title_artist ON Beatmap(Title, Artist);")
 	if err != nil {
 		return err
 	}
@@ -123,9 +148,9 @@ func rebuildDb(db *sql.DB, osuDb *parser.OsuDB) error {
 	stmt, err := db.Prepare(`
 		INSERT INTO Beatmap (
 			BeatmapId, Artist, ArtistUnicode, Title, TitleUnicode, Creator, 
-			Difficulty, AudioFileName, MD5Hash, FileName, RankedStatus, 
+			Difficulty, Audio, MD5Hash, File, RankedStatus, 
 			LastModifiedTime, TotalTime, AudioPreviewTime, BeatmapSetId, 
-			Source, Tags, LastPlayed, FolderName
+			Source, Tags, LastPlayed, Folder
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	//	ON CONFLICT (Artist, Title, MD5Hash) DO NOTHING
@@ -143,7 +168,7 @@ func rebuildDb(db *sql.DB, osuDb *parser.OsuDB) error {
 	stmt = tx.Stmt(stmt)
 
 	for i, beatmap := range osuDb.Beatmaps {
-		//fmt.Println(i, beatmap.Artist, beatmap.SongTitle, beatmap.MD5Hash)
+		fmt.Println(i, beatmap.Artist, beatmap.SongTitle, beatmap.MD5Hash)
 		_, err := stmt.Exec(
 			beatmap.DifficultyID, beatmap.Artist, beatmap.ArtistUnicode,
 			beatmap.SongTitle, beatmap.SongTitleUnicode, beatmap.Creator,
@@ -187,16 +212,17 @@ func getBeatmapCount(db *sql.DB) int {
 }
 
 func getRecent(db *sql.DB, limit, offset int) ([]Song, error) {
-	rows, err := db.Query("SELECT * FROM Songs ORDER BY LastPlayed DESC LIMIT ? OFFSET ?", limit, offset)
+	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
-		return nil, err
+		return []Song{}, err
 	}
 	defer rows.Close()
+
 	return scanSongs(rows)
 }
 
 func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
-	rows, err := db.Query("SELECT * FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
+	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap WHERE MD5Hash FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
 	if err != nil {
 		return ActiveSearch{}, err
 	}
@@ -209,7 +235,7 @@ func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
 }
 
 func getArtists(db *sql.DB, q string, limit, offset int) ([]string, error) {
-	rows, err := db.Query("SELECT * FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
+	rows, err := db.Query("SELECT Artist FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
 	if err != nil {
 		return []string{}, err
 	}
@@ -245,18 +271,33 @@ func getCollections(db *sql.DB, q string, limit, offset int) ([]Collection, erro
 }
 
 func getSong(db *sql.DB, hash string) (Song, error) {
-	row := db.QueryRow("SELECT * FROM Songs WHERE MD5Hash = ?", hash)
-	return scanSong(row)
+
+	row := db.QueryRow("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap WHERE MD5Hash = ?", hash)
+	s, err := scanSong(row)
+	return s, err
+
 }
 
 func scanSongs(rows *sql.Rows) ([]Song, error) {
-
-	var songs []Song
+	songs := []Song{}
 	for rows.Next() {
 		var s Song
-		if err := rows.Scan(&s); err != nil {
+		if err := rows.Scan(&s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
 			return []Song{}, err
 		}
+
+		s.Url = fmt.Sprintf("%s/%s", s.Folder, s.Audio)
+
+		bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
+		if err != nil {
+			fmt.Println(err)
+			s.Image = fmt.Sprintf("404.png")
+		} else {
+			if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
+				s.Image = fmt.Sprintf("%s/%s", s.Folder, bm.Events[0].EventParams[0])
+			}
+		}
+
 		songs = append(songs, s)
 	}
 	return songs, nil
@@ -264,10 +305,23 @@ func scanSongs(rows *sql.Rows) ([]Song, error) {
 
 func scanSong(row *sql.Row) (Song, error) {
 
-	var s Song
-	if err := row.Scan(&s); err != nil {
+	s := Song{}
+	if err := row.Scan(&s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
 		return Song{}, err
 	}
+	s.Url = fmt.Sprintf("%s/%s", s.Folder, s.Audio)
+
+	bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
+	if err != nil {
+		fmt.Println(err)
+		s.Image = fmt.Sprintf("404.png")
+		return s, nil
+	}
+
+	if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
+		s.Image = fmt.Sprintf("%s/%s", s.Folder, bm.Events[0].EventParams[0])
+	}
+
 	return s, nil
 }
 

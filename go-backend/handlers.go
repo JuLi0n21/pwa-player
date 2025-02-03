@@ -2,186 +2,249 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/juli0n21/go-osu-parser/parser"
 )
 
-func run(db *sql.DB, osuDb *parser.OsuDB) {
+var ErrRequiredParameterNotPresent = errors.New("required parameter missing")
+var ErrFailedToParseEncoded = errors.New("invalid encoded value")
+var ErrFileNotFound = errors.New("file not found")
+
+type Server struct {
+	Port   string
+	OsuDir string
+	Db     *sql.DB
+	OsuDb  *parser.OsuDB
+}
+
+func run(s *Server) {
 
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "pong")
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Login endpoint")
+		http.Redirect(w, r, "https://proxy.illegalesachen.download/login", http.StatusTemporaryRedirect)
 	})
 
-	http.HandleFunc("/api/v1/songs/", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
+	http.HandleFunc("/api/v1/songs/{hash}/", func(w http.ResponseWriter, r *http.Request) {
+
+		hash := r.PathValue("hash")
+		if hash == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getRecent(db, limit, offset)
+		song, err := getSong(s.Db, hash)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusNotFound)
+			return
 		}
-		fmt.Fprintln(w, recent)
+
+		writeJSON(w, song, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/songs/recent", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
 
-		recent, err := getRecent(db, limit, offset)
+		limit, offset := pagination(r)
+		recent, err := getRecent(s.Db, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Recent songs endpoint")
+		writeJSON(w, recent, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/songs/favorite", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
+		query := r.URL.Query().Get("query")
+		if query == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getRecent(db, limit, offset)
+		limit, offset := pagination(r)
+
+		favorites, err := getFavorites(s.Db, query, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Favorite songs endpoint")
+		writeJSON(w, favorites, http.StatusOK)
 	})
 
-	http.HandleFunc("/api/v1/collections/{index}", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	http.HandleFunc("/api/v1/collections", func(w http.ResponseWriter, r *http.Request) {
+		index, err := strconv.Atoi(r.URL.Query().Get("index"))
 		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getRecent(db, limit, offset)
+		recent, err := getCollection(s.Db, index)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Collections endpoint")
+		writeJSON(w, recent, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/collections/", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
+		query := r.URL.Query().Get("query")
+		if query == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getRecent(db, limit, offset)
+		limit, offset := pagination(r)
+
+		recent, err := getCollections(s.Db, query, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Collection with index endpoint")
+		writeJSON(w, recent, http.StatusOK)
 	})
 
-	http.HandleFunc("/api/v1/audio/{hash}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Audio endpoint")
+	http.HandleFunc("/api/v1/audio/{filepath}", func(w http.ResponseWriter, r *http.Request) {
+		f := r.PathValue("filepath")
+		if f == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
+		}
+
+		filename, err := base64.RawStdEncoding.DecodeString(f)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
+		}
+
+		file, err := os.Open(s.OsuDir + "Songs/" + string(filename))
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, ErrFileNotFound.Error(), http.StatusNotFound)
+			return
+		}
+		defer file.Close()
+
+		stat, err := file.Stat()
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, ErrFileNotFound.Error(), http.StatusNotFound)
+			return
+		}
+
+		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 	})
 
 	http.HandleFunc("/api/v1/search/active", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
 		q := r.URL.Query().Get("query")
-		if err != nil || q == "" {
-			fmt.Fprintln(w, errors.New("'query' is required for search"))
+		if q == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getSearch(db, q, limit, offset)
+		limit, offset := pagination(r)
+
+		recent, err := getSearch(s.Db, q, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Active search endpoint")
+		writeJSON(w, recent, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/search/artist", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
 		q := r.URL.Query().Get("query")
-		if err != nil {
-			fmt.Fprintln(w, err)
+		if q == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getArtists(db, q, limit, offset)
+		limit, offset := pagination(r)
+
+		recent, err := getArtists(s.Db, q, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
-		fmt.Fprintln(w, "Artist search endpoint")
+		writeJSON(w, recent, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/search/collections", func(w http.ResponseWriter, r *http.Request) {
-		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-		if err != nil {
-			fmt.Fprintln(w, err)
-		}
 		q := r.URL.Query().Get("query")
-		if err != nil {
-			fmt.Fprintln(w, err)
+		if q == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
 		}
 
-		recent, err := getCollections(db, q, limit, offset)
+		limit, offset := pagination(r)
+
+		recent, err := getCollections(s.Db, q, limit, offset)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Fprintln(w, recent)
+		writeJSON(w, recent, http.StatusOK)
 	})
 
 	http.HandleFunc("/api/v1/images/{filename}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Images endpoint")
+		f := r.PathValue("filename")
+		if f == "" {
+			http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+			return
+		}
+
+		filename, err := base64.RawStdEncoding.DecodeString(f)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, ErrFailedToParseEncoded.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.ServeFile(w, r, s.OsuDir+"Songs/"+string(filename))
 	})
 
-	fmt.Println("starting server on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	fmt.Println("starting server on http://localhost" + s.Port)
+	log.Fatal(http.ListenAndServe(s.Port, nil))
+}
+
+func writeJSON(w http.ResponseWriter, v any, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to encode JSON response", http.StatusInternalServerError)
+	}
+}
+
+func pagination(r *http.Request) (int, int) {
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit <= 0 || limit > 100 {
+		limit = 100
+	}
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	return limit, offset
 }
