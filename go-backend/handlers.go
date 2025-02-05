@@ -38,7 +38,6 @@ func (s *Server) registerRoutes() {
 	http.HandleFunc("/api/v1/songs/favorites", s.favorites)
 
 	http.HandleFunc("/api/v1/collection", s.collection)
-	http.HandleFunc("/api/v1/collections", s.collections)
 	http.HandleFunc("/api/v1/search/collections", s.collectionSearch)
 
 	http.HandleFunc("/api/v1/search/active", s.activeSearch)
@@ -46,7 +45,7 @@ func (s *Server) registerRoutes() {
 
 	http.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
 	http.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
-	http.Handle("/swagger-ui", httpSwagger.WrapHandler)
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
 }
 
 func run(s *Server) {
@@ -100,7 +99,7 @@ func (s *Server) song(w http.ResponseWriter, r *http.Request) {
 	song, err := getSong(s.Db, hash)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusNotFound)
+		http.Error(w, "beatmap not found by hash", http.StatusNotFound)
 		return
 	}
 
@@ -170,58 +169,39 @@ func (s *Server) favorites(w http.ResponseWriter, r *http.Request) {
 //	@Tags			songs
 //	@Accept			json
 //	@Produce		json
-//	@Param			index	query		int	true	"Index"
+//	@Param			index	query		int	false	"Index"
+//	@Param			name	query		string 	false	"Index"
 //	@Success		200		{array}		Song
 //	@Failure		400		{string}	string	"Invalid parameter"
 //	@Failure		500		{string}	string	"Internal server error"
 //	@Router			/collection [get]
 func (s *Server) collection(w http.ResponseWriter, r *http.Request) {
+	limit, offset := pagination(r)
+	name := r.URL.Query().Get("name")
+	if name != "" {
+		c, err := getCollectionByName(s.Db, limit, offset, name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, c, http.StatusOK)
+		return
+	}
+
 	index, err := strconv.Atoi(r.URL.Query().Get("index"))
 	if err != nil {
 		http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
 		return
-	}
-
-	limit, offset := pagination(r)
-
-	recent, err := getCollection(s.Db, limit, offset, index)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	writeJSON(w, recent, http.StatusOK)
-}
-
-// @Summary		Retrieves collections based on a query
-// @Description	Retrieves collections from the database with pagination based on the query parameter
-// @Tags			search
-// @Accept			json
-// @Produce		json
-// @Param			query	query		string		false	"Search query"
-// @Param			limit	query		int			false	"Limit the number of results"	default(10)
-// @Param			offset	query		int			false	"Offset for pagination"			default(0)
-// @Success		200		{array}		Collection	"List of collections"
-// @Failure		400		{object}	string		"Bad Request"
-// @Failure		500		{object}	string		"Internal Server Error"
-// @Router			/collections [get]
-func (s *Server) collections(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
-	if query == "" {
-		http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
+	} else {
+		c, err := getCollection(s.Db, limit, offset, index)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, c, http.StatusOK)
 		return
 	}
 
-	//TODO
-
-	limit, offset := pagination(r)
-
-	recent, err := getCollections(s.Db, query, limit, offset)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	writeJSON(w, recent, http.StatusOK)
 }
 
 // @Summary		Searches collections based on a query
@@ -238,22 +218,16 @@ func (s *Server) collections(w http.ResponseWriter, r *http.Request) {
 // @Router			/search/collections [get]
 func (s *Server) collectionSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("query")
-	if q == "" {
-		http.Error(w, ErrRequiredParameterNotPresent.Error(), http.StatusBadRequest)
-		return
-	}
-
-	//TODO
 
 	limit, offset := pagination(r)
 
-	recent, err := getCollections(s.Db, q, limit, offset)
+	preview, err := getCollections(s.Db, q, limit, offset)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, recent, http.StatusOK)
+	writeJSON(w, preview, http.StatusOK)
 }
 
 // @Summary		Searches active records based on a query

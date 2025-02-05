@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/juli0n21/go-osu-parser v0.0.6
+	github.com/juli0n21/go-osu-parser v0.0.8
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.4
 	modernc.org/sqlite v1.34.5

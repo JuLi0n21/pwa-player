@@ -419,13 +419,78 @@ func getCollection(db *sql.DB, limit, offset, index int) (Collection, error) {
 	return c, nil
 }
 
-func getCollections(db *sql.DB, q string, limit, offset int) ([]Collection, error) {
-	//not correct
-	rows, err := db.Query("SELECT Name,  FROM Collections WHERE name = ? LIMIT ? OFFSET ?", q, limit, offset)
+func getCollectionByName(db *sql.DB, limit, offset int, name string) (Collection, error) {
+	rows, err := db.Query(`
+	SELECT 
+		c.Name, b.BeatmapId, b.MD5Hash, b.Title, b.Artist, 
+		b.Creator, b.Folder, b.File, b.Audio, b.TotalTime
+		FROM Collection c
+		Join Beatmap b ON c.MD5Hash = b.MD5Hash
+		WHERE c.Name = ?
+		LIMIT ? 
+		OFFSET ?;`, name, limit, offset)
 	if err != nil {
-		return []Collection{}, err
+		return Collection{}, err
 	}
-	return scanCollections(rows)
+	defer rows.Close()
+
+	var c Collection
+	for rows.Next() {
+		s := Song{}
+		if err := rows.Scan(&c.Name, &s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
+			return Collection{}, err
+		}
+
+		s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+
+		c.Songs = append(c.Songs, s)
+	}
+
+	row := db.QueryRow(`SELECT COUNT(*) FROM Collection WHERE Name = ?`, c.Name)
+	var count string
+	row.Scan(&count)
+
+	if i, err := strconv.Atoi(count); err == nil {
+		c.Items = i
+	} else {
+		return Collection{}, err
+	}
+
+	return c, nil
+}
+
+func getCollections(db *sql.DB, q string, limit, offset int) ([]CollectionPreview, error) {
+	rows, err := db.Query(`
+		SELECT 
+		c.Name, COUNT(b.MD5Hash), b.Folder, b.File
+		FROM Collection c
+		Join Beatmap b ON c.MD5Hash = b.MD5Hash
+		WHERE c.Name LIKE ?
+		GROUP BY c.NAME
+		LIMIT ?
+		OFFSET ?;`, "%"+q+"%", limit, offset)
+	if err != nil {
+		return []CollectionPreview{}, err
+	}
+	defer rows.Close()
+
+	var collections []CollectionPreview
+	for rows.Next() {
+		var c CollectionPreview
+		var folder, file, count string
+		if err := rows.Scan(&c.Name, &count, &folder, &file); err != nil {
+			return []CollectionPreview{}, err
+		}
+
+		if i, err := strconv.Atoi(count); err == nil {
+			c.Items = i
+		}
+		c.Image = extractImageFromFile(fileName, folder, file)
+
+		collections = append(collections, c)
+	}
+
+	return collections, nil
 }
 
 func getSong(db *sql.DB, hash string) (Song, error) {
@@ -472,14 +537,18 @@ func scanSong(row *sql.Row) (Song, error) {
 }
 
 func extractImageFromFile(osuRoot, folder, file string) string {
-	bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", osuRoot, folder, file))
+	bm, err := parser.ParseOsuFile(filepath.Join(osuRoot, "Songs", folder, file))
 	if err != nil {
 		fmt.Println(err)
 		return "404.png"
 	}
 
-	if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
-		return fmt.Sprintf("%s/%s", folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
+	if bm.Version > 3 {
+		if len(bm.Events) > 0 && len(bm.Events[0].EventParams) > 0 {
+			return fmt.Sprintf(`%s/%s`, folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
+		}
+	} else {
+		fmt.Println(bm.Events)
 	}
 
 	return "404.png"

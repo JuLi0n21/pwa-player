@@ -18,9 +18,8 @@ type Song struct {
 // CollectionPreview represents a preview of a song collection
 // @Description CollectionPreview contains summary data of a song collection
 type CollectionPreview struct {
-	Name  string `json:"name" example:"Favorite Songs"`
+	Name  string `json:"name" example:"Collection Name"`
 	Image string `json:"image" example:"cover.jpg"`
-	Index int    `json:"index" example:"1"`
 	Items int    `json:"items" example:"10"`
 }
 
