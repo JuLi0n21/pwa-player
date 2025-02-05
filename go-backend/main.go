@@ -8,12 +8,12 @@ import (
 	"github.com/juli0n21/go-osu-parser/parser"
 )
 
-// @title go-osu-music-hoster
-// @version 1.0
-// @description Server Hosting ur own osu files over a simple Api
+//	@title			go-osu-music-hoster
+//	@version		1.0
+//	@description	Server Hosting ur own osu files over a simple Api
 
-// @host localhost:8080
-// @BasePath /api/v1/
+//	@host		localhost:8080
+//	@BasePath	/api/v1/
 func main() {
 
 	filename := "/mnt/g/Anwendungen/osu!/osu!.db"

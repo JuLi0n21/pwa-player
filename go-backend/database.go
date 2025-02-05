@@ -47,7 +47,22 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuRoot string) (*sql.
 	}
 
 	if err = checkhealth(db, osuDB); err != nil {
-		if err = rebuildDb(db, osuDB); err != nil {
+		if err = rebuildBeatmapDb(db, osuDB); err != nil {
+			return nil, err
+		}
+	}
+
+	if err = createCollectionDB(db); err != nil {
+		return nil, err
+	}
+
+	collectionDB, err := parser.ParseCollectionsDB(osuRoot + "collection.db")
+	if err != nil {
+		return nil, err
+	}
+
+	if err = checkCollectionHealth(db, collectionDB); err != nil {
+		if err = rebuildCollectionDb(db, collectionDB); err != nil {
 			return nil, err
 		}
 	}
@@ -56,7 +71,8 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuRoot string) (*sql.
 }
 
 func createDB(db *sql.DB) error {
-	_, err := db.Query(`
+
+	_, err := db.Exec(`
 	CREATE TABLE IF NOT EXISTS Beatmap (
     BeatmapId INTEGER DEFAULT 0,
     Artist TEXT DEFAULT '?????',
@@ -102,6 +118,29 @@ func createDB(db *sql.DB) error {
 	return nil
 }
 
+func createCollectionDB(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS Collection (
+		Name TEXT DEFAULT '',
+		MD5Hash TEXT DEFAULT '00000000000000000000000000000000'
+		);
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_collection_name ON Collection(Name);")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("CREATE INDEX IF NOT EXISTS idx_collection_md5hash ON Collection(MD5Hash);")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func checkhealth(db *sql.DB, osuDb *parser.OsuDB) error {
 
 	rows, err := db.Query(`SELECT COUNT(*) FROM Beatmap GROUP BY BeatmapSetId;`)
@@ -137,9 +176,9 @@ func checkhealth(db *sql.DB, osuDb *parser.OsuDB) error {
 	return nil
 }
 
-func rebuildDb(db *sql.DB, osuDb *parser.OsuDB) error {
+func rebuildBeatmapDb(db *sql.DB, osuDb *parser.OsuDB) error {
 
-	if _, err := db.Query("DROP TABLE Beatmap"); err != nil {
+	if _, err := db.Exec("DROP TABLE Beatmap"); err != nil {
 		return err
 	}
 
@@ -188,6 +227,82 @@ func rebuildDb(db *sql.DB, osuDb *parser.OsuDB) error {
 	}
 
 	return nil
+}
+
+func checkCollectionHealth(db *sql.DB, collectionDB *parser.Collections) error {
+	rows, err := db.Query(`SELECT COUNT(*) FROM Collection GROUP BY Name;`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var count int
+	if err = rows.Scan(&count); err != nil {
+		return err
+	}
+
+	if count != int(collectionDB.NumberOfCollections) {
+		return errors.New("Collection Count Not Matching")
+	}
+
+	rows, err = db.Query(`SELECT COUNT(*) FROM Collection;`)
+	if err != nil {
+		return err
+	}
+
+	if err = rows.Scan(&count); err != nil {
+		return err
+	}
+
+	sum := 0
+	for _, col := range collectionDB.Collections {
+		sum += len(col.Beatmaps)
+	}
+
+	if count != int(sum) {
+		return errors.New("Beatmap count missmatch rebuilding collections")
+	}
+
+	return nil
+}
+
+func rebuildCollectionDb(db *sql.DB, collectionDb *parser.Collections) error {
+	if _, err := db.Exec("DROP TABLE Collection"); err != nil {
+		return err
+	}
+
+	if err := createCollectionDB(db); err != nil {
+		return err
+	}
+
+	stmt, err := db.Prepare(`
+		INSERT INTO Collection (
+			Name,
+			MD5Hash
+		) VALUES (?, ?)
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt = tx.Stmt(stmt)
+
+	for _, col := range collectionDb.Collections {
+		for _, hash := range col.Beatmaps {
+			_, err := stmt.Exec(col.Name, hash)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+
+	return tx.Commit()
 }
 
 func getBeatmapCount(db *sql.DB) int {
@@ -258,8 +373,12 @@ func getFavorites(db *sql.DB, q string, limit, offset int) ([]Song, error) {
 }
 
 func getCollection(db *sql.DB, index int) (Collection, error) {
-	row := db.QueryRow("SELECT * FROM Collections WHERE CollectionId = ?", index)
-	return scanCollection(row)
+	rows, err := db.Query("SELECT * FROM Collection WHERE rowid = ? GROUP BY NAME", index)
+	if err != nil {
+		return Collection{}, err
+	}
+	defer rows.Close()
+	return scanCollection(rows)
 }
 
 func getCollections(db *sql.DB, q string, limit, offset int) ([]Collection, error) {
@@ -336,11 +455,16 @@ func scanCollections(rows *sql.Rows) ([]Collection, error) {
 	return collection, nil
 }
 
-func scanCollection(row *sql.Row) (Collection, error) {
+func scanCollection(rows *sql.Rows) (Collection, error) {
 
 	var c Collection
-	if err := row.Scan(&c); err != nil {
-		return Collection{}, err
+	for rows.Next() {
+		var s Song
+		if err := rows.Scan(&c.Name, &s.MD5Hash); err != nil {
+			return Collection{}, err
+		}
+
+		c.Songs = append(c.Songs, s)
 	}
 	return c, nil
 }
