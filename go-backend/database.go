@@ -352,16 +352,23 @@ func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
 }
 
 func getArtists(db *sql.DB, q string, limit, offset int) ([]string, error) {
-	rows, err := db.Query("SELECT Artist FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
+	rows, err := db.Query("SELECT Artist FROM Beatmap WHERE Artist LIKE ? OR Title LIKE ? GROUP BY Artist LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
 	if err != nil {
 		return []string{}, err
 	}
 	defer rows.Close()
-	_, err = scanSongs(rows)
-	if err != nil {
-		return []string{}, err
+
+	var artist []string
+	for rows.Next() {
+		var a string
+		err := rows.Scan(&a)
+		if err != nil {
+			return []string{}, err
+		}
+		artist = append(artist, a)
 	}
-	return []string{}, nil
+
+	return artist, nil
 }
 
 func getFavorites(db *sql.DB, q string, limit, offset int) ([]Song, error) {

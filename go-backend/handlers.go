@@ -283,13 +283,13 @@ func (s *Server) artistSearch(w http.ResponseWriter, r *http.Request) {
 	//TODO
 	limit, offset := pagination(r)
 
-	recent, err := getArtists(s.Db, q, limit, offset)
+	a, err := getArtists(s.Db, q, limit, offset)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, recent, http.StatusOK)
+	writeJSON(w, a, http.StatusOK)
 }
 
 // @Summary		Retrieves a song file by its encoded path
