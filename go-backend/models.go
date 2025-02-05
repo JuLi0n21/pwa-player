@@ -37,3 +37,10 @@ type ActiveSearch struct {
 	Artist string `json:"artist" example:"Ed Sheeran"`
 	Songs  []Song `json:"songs"`
 }
+
+// Artist represents an active song search query
+// @Description Artist holds search results for a given artist
+type Artist struct {
+	Artist string `json:"artist" example:"Miku"`
+	Count  int    `json:"count" example:"21"`
+}

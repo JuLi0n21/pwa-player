@@ -287,10 +287,7 @@ const docTemplate = `{
                     "200": {
                         "description": "List of artists",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/main.Artist"
                         }
                     },
                     "400": {
@@ -406,6 +403,52 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Song not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/songs/artist": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "songs"
+                ],
+                "summary": "Returns all the Songs of a specific Artist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artist Name",
+                        "name": "artist",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Song"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "string"
                         }
@@ -537,6 +580,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/main.Song"
                     }
+                }
+            }
+        },
+        "main.Artist": {
+            "description": "Artist holds search results for a given artist",
+            "type": "object",
+            "properties": {
+                "artist": {
+                    "type": "string",
+                    "example": "Miku"
+                },
+                "count": {
+                    "type": "integer",
+                    "example": 21
                 }
             }
         },

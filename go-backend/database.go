@@ -351,21 +351,22 @@ func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
 	return ActiveSearch{}, nil
 }
 
-func getArtists(db *sql.DB, q string, limit, offset int) ([]string, error) {
-	rows, err := db.Query("SELECT Artist FROM Beatmap WHERE Artist LIKE ? OR Title LIKE ? GROUP BY Artist LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
+func getArtists(db *sql.DB, q string, limit, offset int) ([]Artist, error) {
+	rows, err := db.Query("SELECT Artist, COUNT(Artist) FROM Beatmap WHERE Artist LIKE ? OR Title LIKE ? GROUP BY Artist LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
 	if err != nil {
-		return []string{}, err
+		return []Artist{}, err
 	}
 	defer rows.Close()
 
-	var artist []string
+	artist := []Artist{}
 	for rows.Next() {
 		var a string
-		err := rows.Scan(&a)
+		var c int
+		err := rows.Scan(&a, &c)
 		if err != nil {
-			return []string{}, err
+			return []Artist{}, err
 		}
-		artist = append(artist, a)
+		artist = append(artist, Artist{Artist: a, Count: c})
 	}
 
 	return artist, nil

@@ -11,6 +11,16 @@ definitions:
           $ref: '#/definitions/main.Song'
         type: array
     type: object
+  main.Artist:
+    description: Artist holds search results for a given artist
+    properties:
+      artist:
+        example: Miku
+        type: string
+      count:
+        example: 21
+        type: integer
+    type: object
   main.Collection:
     description: Collection holds a list of songs
     properties:
@@ -248,9 +258,7 @@ paths:
         "200":
           description: List of artists
           schema:
-            items:
-              type: string
-            type: array
+            $ref: '#/definitions/main.Artist'
         "400":
           description: Bad Request
           schema:
@@ -330,6 +338,36 @@ paths:
           schema:
             type: string
       summary: Get a song by its hash
+      tags:
+      - songs
+  /songs/artist:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Artist Name
+        in: query
+        name: artist
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Song'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Returns all the Songs of a specific Artist
       tags:
       - songs
   /songs/favorites:
