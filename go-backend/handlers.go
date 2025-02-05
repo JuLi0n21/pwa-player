@@ -182,9 +182,9 @@ func (s *Server) collection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO
+	limit, offset := pagination(r)
 
-	recent, err := getCollection(s.Db, index)
+	recent, err := getCollection(s.Db, limit, offset, index)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

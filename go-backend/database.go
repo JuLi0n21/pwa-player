@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/juli0n21/go-osu-parser/parser"
@@ -372,18 +373,55 @@ func getFavorites(db *sql.DB, q string, limit, offset int) ([]Song, error) {
 	return scanSongs(rows)
 }
 
-func getCollection(db *sql.DB, index int) (Collection, error) {
-	rows, err := db.Query("SELECT * FROM Collection WHERE rowid = ? GROUP BY NAME", index)
+func getCollection(db *sql.DB, limit, offset, index int) (Collection, error) {
+	rows, err := db.Query(`
+	WITH cols AS (
+	SELECT 
+		c.Name, 
+		ROW_NUMBER() OVER (ORDER BY c.Name) AS RowNumber
+	FROM Collection c
+	GROUP BY c.Name
+	)
+
+	SELECT 
+		c.Name, b.BeatmapId, b.MD5Hash, b.Title, b.Artist, 
+		b.Creator, b.Folder, b.File, b.Audio, b.TotalTime
+		FROM Collection c
+		Join Beatmap b ON c.MD5Hash = b.MD5Hash
+		WHERE c.Name = (SELECT Name FROM cols WHERE RowNumber = ?)
+		LIMIT ? 
+		OFFSET ?;`, index, limit, offset)
 	if err != nil {
 		return Collection{}, err
 	}
 	defer rows.Close()
-	return scanCollection(rows)
+
+	var c Collection
+	for rows.Next() {
+		s := Song{}
+		if err := rows.Scan(&c.Name, &s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
+			return Collection{}, err
+		}
+
+		s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+
+		c.Songs = append(c.Songs, s)
+	}
+
+	row := db.QueryRow(`SELECT COUNT(*) FROM Collection WHERE Name = ?`, c.Name)
+	var count string
+	row.Scan(&count)
+
+	if i, err := strconv.Atoi(count); err == nil {
+		c.Items = i
+	}
+
+	return c, nil
 }
 
 func getCollections(db *sql.DB, q string, limit, offset int) ([]Collection, error) {
 	//not correct
-	rows, err := db.Query("SELECT * FROM Collections WHERE name = ? LIMIT ? OFFSET ?", q, limit, offset)
+	rows, err := db.Query("SELECT Name,  FROM Collections WHERE name = ? LIMIT ? OFFSET ?", q, limit, offset)
 	if err != nil {
 		return []Collection{}, err
 	}
@@ -428,18 +466,23 @@ func scanSong(row *sql.Row) (Song, error) {
 		return Song{}, err
 	}
 
-	bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
+	s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+
+	return s, nil
+}
+
+func extractImageFromFile(osuRoot, folder, file string) string {
+	bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", osuRoot, folder, file))
 	if err != nil {
 		fmt.Println(err)
-		s.Image = fmt.Sprintf("404.png")
-		return s, nil
+		return "404.png"
 	}
 
 	if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
-		s.Image = fmt.Sprintf("%s/%s", s.Folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
+		return fmt.Sprintf("%s/%s", folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
 	}
 
-	return s, nil
+	return "404.png"
 }
 
 func scanCollections(rows *sql.Rows) ([]Collection, error) {
@@ -453,20 +496,6 @@ func scanCollections(rows *sql.Rows) ([]Collection, error) {
 		collection = append(collection, c)
 	}
 	return collection, nil
-}
-
-func scanCollection(rows *sql.Rows) (Collection, error) {
-
-	var c Collection
-	for rows.Next() {
-		var s Song
-		if err := rows.Scan(&c.Name, &s.MD5Hash); err != nil {
-			return Collection{}, err
-		}
-
-		c.Songs = append(c.Songs, s)
-	}
-	return c, nil
 }
 
 func scanCollectionPreviews(rows *sql.Rows) ([]CollectionPreview, error) {
