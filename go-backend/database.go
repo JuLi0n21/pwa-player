@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,12 +18,12 @@ import (
 var ErrBeatmapCountNotMatch = errors.New("beatmap count not matching")
 
 var osuDB *parser.OsuDB
-var fileName string
+var osuRoot string
 
-func initDB(connectionString string, osuDb *parser.OsuDB, osuRoot string) (*sql.DB, error) {
+func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.DB, error) {
 
 	osuDB = osuDb
-	fileName = osuRoot
+	osuRoot = osuroot
 
 	dir := filepath.Dir(connectionString)
 
@@ -57,7 +58,7 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuRoot string) (*sql.
 		return nil, err
 	}
 
-	collectionDB, err := parser.ParseCollectionsDB(osuRoot + "collection.db")
+	collectionDB, err := parser.ParseCollectionsDB(path.Join(osuRoot, "collection.db"))
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +412,7 @@ func getCollection(db *sql.DB, limit, offset, index int) (Collection, error) {
 			return Collection{}, err
 		}
 
-		s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+		s.Image = extractImageFromFile(osuRoot, s.Folder, s.File)
 
 		c.Songs = append(c.Songs, s)
 	}
@@ -449,7 +450,7 @@ func getCollectionByName(db *sql.DB, limit, offset int, name string) (Collection
 			return Collection{}, err
 		}
 
-		s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+		s.Image = extractImageFromFile(osuRoot, s.Folder, s.File)
 
 		c.Songs = append(c.Songs, s)
 	}
@@ -493,7 +494,7 @@ func getCollections(db *sql.DB, q string, limit, offset int) ([]CollectionPrevie
 		if i, err := strconv.Atoi(count); err == nil {
 			c.Items = i
 		}
-		c.Image = extractImageFromFile(fileName, folder, file)
+		c.Image = extractImageFromFile(osuRoot, folder, file)
 
 		collections = append(collections, c)
 	}
@@ -517,7 +518,7 @@ func scanSongs(rows *sql.Rows) ([]Song, error) {
 			return []Song{}, err
 		}
 
-		bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", fileName, s.Folder, s.File))
+		bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", osuRoot, s.Folder, s.File))
 		if err != nil {
 			fmt.Println(err)
 			s.Image = fmt.Sprintf("404.png")
@@ -539,7 +540,7 @@ func scanSong(row *sql.Row) (Song, error) {
 		return Song{}, err
 	}
 
-	s.Image = extractImageFromFile(fileName, s.Folder, s.File)
+	s.Image = extractImageFromFile(osuRoot, s.Folder, s.File)
 
 	return s, nil
 }

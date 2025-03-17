@@ -13,6 +13,7 @@ import (
 
 	_ "backend/docs"
 
+	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/juli0n21/go-osu-parser/parser"
@@ -27,6 +28,7 @@ type Server struct {
 	OsuDir string
 	Db     *sql.DB
 	OsuDb  *parser.OsuDB
+	Env    map[string]string
 }
 
 func (s *Server) registerRoutes() {
@@ -46,6 +48,8 @@ func (s *Server) registerRoutes() {
 
 	http.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
 	http.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
+
+	http.HandleFunc("/api/v1/callback", s.callback)
 	http.Handle("/swagger/", httpSwagger.WrapHandler)
 }
 
@@ -205,18 +209,18 @@ func (s *Server) collection(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//	@Summary		Searches collections based on a query
-//	@Description	Searches collections in the database based on the query parameter
-//	@Tags			search
-//	@Accept			json
-//	@Produce		json
-//	@Param			query	query		string		true	"Search query"
-//	@Param			limit	query		int			false	"Limit the number of results"	default(10)
-//	@Param			offset	query		int			false	"Offset for pagination"			default(0)
-//	@Success		200		{array}		Collection	"List of collections"
-//	@Failure		400		{object}	string		"Bad Request"
-//	@Failure		500		{object}	string		"Internal Server Error"
-//	@Router			/search/collections [get]
+// @Summary		Searches collections based on a query
+// @Description	Searches collections in the database based on the query parameter
+// @Tags			search
+// @Accept			json
+// @Produce		json
+// @Param			query	query		string		true	"Search query"
+// @Param			limit	query		int			false	"Limit the number of results"	default(10)
+// @Param			offset	query		int			false	"Offset for pagination"			default(0)
+// @Success		200		{array}		Collection	"List of collections"
+// @Failure		400		{object}	string		"Bad Request"
+// @Failure		500		{object}	string		"Internal Server Error"
+// @Router			/search/collections [get]
 func (s *Server) collectionSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("query")
 
@@ -231,15 +235,15 @@ func (s *Server) collectionSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, preview, http.StatusOK)
 }
 
-//	@Summary	Returns all the Songs of a specific Artist
-//	@Tags		songs
-//	@Accept		json
-//	@Produce	json
-//	@Param		artist	query		string	true	"Artist Name"
-//	@Success	200		{array}		Song
-//	@Failure	400		{object}	string	"Bad Request"
-//	@Failure	500		{object}	string	"Internal Server Error"
-//	@Router		/songs/artist [get]
+// @Summary	Returns all the Songs of a specific Artist
+// @Tags		songs
+// @Accept		json
+// @Produce	json
+// @Param		artist	query		string	true	"Artist Name"
+// @Success	200		{array}		Song
+// @Failure	400		{object}	string	"Bad Request"
+// @Failure	500		{object}	string	"Internal Server Error"
+// @Router		/songs/artist [get]
 func (s *Server) aristsSongs(w http.ResponseWriter, r *http.Request) {
 	artist := r.URL.Query().Get("artist")
 	if artist == "" {
@@ -250,18 +254,18 @@ func (s *Server) aristsSongs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, []Song{}, http.StatusOK)
 }
 
-//	@Summary		Searches active records based on a query
-//	@Description	Searches active records in the database based on the query parameter
-//	@Tags			search
-//	@Accept			json
-//	@Produce		json
-//	@Param			query	query		string			true	"Search query"
-//	@Param			limit	query		int				false	"Limit the number of results"	default(10)
-//	@Param			offset	query		int				false	"Offset for pagination"			default(0)
-//	@Success		200		{object}	ActiveSearch	"Active search result"
-//	@Failure		400		{object}	string			"Bad Request"
-//	@Failure		500		{object}	string			"Internal Server Error"
-//	@Router			/search/active [get]
+// @Summary		Searches active records based on a query
+// @Description	Searches active records in the database based on the query parameter
+// @Tags			search
+// @Accept			json
+// @Produce		json
+// @Param			query	query		string			true	"Search query"
+// @Param			limit	query		int				false	"Limit the number of results"	default(10)
+// @Param			offset	query		int				false	"Offset for pagination"			default(0)
+// @Success		200		{object}	ActiveSearch	"Active search result"
+// @Failure		400		{object}	string			"Bad Request"
+// @Failure		500		{object}	string			"Internal Server Error"
+// @Router			/search/active [get]
 func (s *Server) activeSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("query")
 	if q == "" {
@@ -281,18 +285,18 @@ func (s *Server) activeSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, recent, http.StatusOK)
 }
 
-//	@Summary		Searches for artists based on a query
-//	@Description	Searches for artists in the database based on the query parameter
-//	@Tags			search
-//	@Accept			json
-//	@Produce		json
-//	@Param			query	query		string	true	"Search query"
-//	@Param			limit	query		int		false	"Limit the number of results"	default(10)
-//	@Param			offset	query		int		false	"Offset for pagination"			default(0)
-//	@Success		200		{object}	Artist	"List of artists"
-//	@Failure		400		{object}	string	"Bad Request"
-//	@Failure		500		{object}	string	"Internal Server Error"
-//	@Router			/search/artist [get]
+// @Summary		Searches for artists based on a query
+// @Description	Searches for artists in the database based on the query parameter
+// @Tags			search
+// @Accept			json
+// @Produce		json
+// @Param			query	query		string	true	"Search query"
+// @Param			limit	query		int		false	"Limit the number of results"	default(10)
+// @Param			offset	query		int		false	"Offset for pagination"			default(0)
+// @Success		200		{object}	Artist	"List of artists"
+// @Failure		400		{object}	string	"Bad Request"
+// @Failure		500		{object}	string	"Internal Server Error"
+// @Router			/search/artist [get]
 func (s *Server) artistSearch(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("query")
 	if q == "" {
@@ -312,16 +316,16 @@ func (s *Server) artistSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, a, http.StatusOK)
 }
 
-//	@Summary		Retrieves a song file by its encoded path
-//	@Description	Retrieves a song file from the server based on the provided encoded filepath
-//	@Tags			files
-//	@Accept			json
-//	@Produce		json
-//	@Param			filepath	path		string	true	"Base64 encoded file path"
-//	@Success		200			{file}		File	"The requested song file"
-//	@Failure		400			{object}	string	"Bad Request"
-//	@Failure		404			{object}	string	"File Not Found"
-//	@Router			/audio/{filepath} [get]
+// @Summary		Retrieves a song file by its encoded path
+// @Description	Retrieves a song file from the server based on the provided encoded filepath
+// @Tags			files
+// @Accept			json
+// @Produce		json
+// @Param			filepath	path		string	true	"Base64 encoded file path"
+// @Success		200			{file}		File	"The requested song file"
+// @Failure		400			{object}	string	"Bad Request"
+// @Failure		404			{object}	string	"File Not Found"
+// @Router			/audio/{filepath} [get]
 func (s *Server) songFile(w http.ResponseWriter, r *http.Request) {
 	f := r.PathValue("filepath")
 	if f == "" {
@@ -354,16 +358,16 @@ func (s *Server) songFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 }
 
-//	@Summary		Retrieves an image file by its encoded path
-//	@Description	Retrieves an image file from the server based on the provided encoded filepath
-//	@Tags			files
-//	@Accept			json
-//	@Produce		json
-//	@Param			filepath	path		string	true	"Base64 encoded file path"
-//	@Success		200			{file}		File	"The requested image file"
-//	@Failure		400			{object}	string	"Bad Request"
-//	@Failure		404			{object}	string	"File Not Found"
-//	@Router			/image/{filepath} [get]
+// @Summary		Retrieves an image file by its encoded path
+// @Description	Retrieves an image file from the server based on the provided encoded filepath
+// @Tags			files
+// @Accept			json
+// @Produce		json
+// @Param			filepath	path		string	true	"Base64 encoded file path"
+// @Success		200			{file}		File	"The requested image file"
+// @Failure		400			{object}	string	"Bad Request"
+// @Failure		404			{object}	string	"File Not Found"
+// @Router			/image/{filepath} [get]
 func (s *Server) imageFile(w http.ResponseWriter, r *http.Request) {
 	f := r.PathValue("filepath")
 	if f == "" {
@@ -379,6 +383,15 @@ func (s *Server) imageFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.ServeFile(w, r, s.OsuDir+"Songs/"+string(filename))
+}
+
+func (s *Server) callback(w http.ResponseWriter, r *http.Request) {
+	cookie := r.URL.Query().Get("COOKIE")
+
+	if cookie != "" {
+		s.Env["COOKIE"] = cookie
+		godotenv.Write(s.Env, ".env")
+	}
 }
 
 func writeJSON(w http.ResponseWriter, v any, status int) {
