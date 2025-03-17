@@ -75,7 +75,7 @@ func CORS(next http.Handler) http.Handler {
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println(r.URL)
+		fmt.Println(r.Method, r.URL, r.Referer())
 		next.ServeHTTP(w, r)
 	})
 
