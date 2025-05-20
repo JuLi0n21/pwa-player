@@ -17,8 +17,6 @@ func run() error {
 	mux.Handle("GET /oauth/code", http.HandlerFunc(Oauth))
 	mux.Handle("POST /settings", AuthMiddleware(http.HandlerFunc(Settings)))
 
-	//	mux.Handle("POST /setting", );
-
 	fmt.Println("Starting Server on", port)
 
 	//global middleware
@@ -77,7 +75,6 @@ func Settings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return
 }
 
 func JSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {

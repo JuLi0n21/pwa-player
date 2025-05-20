@@ -1,28 +1,31 @@
 package main
 
 import (
+	v1 "backend/gen"
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"regexp"
 	"strings"
+	"syscall"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
 	"github.com/juli0n21/go-osu-parser/parser"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-//	@title			go-osu-music-hoster
-//	@version		1.0
-//	@description	Server Hosting ur own osu files over a simple Api
-
-// @host		/
-// @BasePath	/api/v1/
 func main() {
 	envMap, err := godotenv.Read(".env")
 	if err != nil {
@@ -75,7 +78,10 @@ func main() {
 		Env:    envMap,
 	}
 
-	run(s)
+	// Run gRPC + grpc-gateway servers
+	if err := runGrpcAndGateway(s, port); err != nil {
+		log.Fatalf("Failed to run servers: %v", err)
+	}
 }
 
 func GetEnv(key, fallback string) string {
@@ -160,4 +166,67 @@ func sendUrl(endpoint, cookie string) error {
 		return fmt.Errorf("Error in request: %s", resp.Status)
 	}
 	return nil
+}
+
+func runGrpcAndGateway(s *Server, port string) error {
+	grpcPort := ":9090" // gRPC server port
+	httpPort := port    // REST gateway port (e.g. ":8080")
+
+	grpcLis, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", grpcPort, err)
+	}
+	grpcServer := grpc.NewServer()
+	v1.RegisterMusicBackendServer(grpcServer, s) // Register your service implementation
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	gwMux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	err = v1.RegisterMusicBackendHandlerFromEndpoint(ctx, gwMux, grpcPort, opts)
+	if err != nil {
+		return fmt.Errorf("failed to register grpc-gateway: %w", err)
+	}
+
+	mux := http.NewServeMux()
+
+	mux.Handle("/api/v1/", gwMux)
+
+	mux.HandleFunc("/files", s.songFile)
+
+	fileServer := http.FileServer(http.Dir("gen/swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fileServer))
+
+	httpServer := &http.Server{
+		Addr:    httpPort,
+		Handler: mux,
+	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	errChan := make(chan error, 2)
+
+	go func() {
+		log.Printf("Starting gRPC server on %s", grpcPort)
+		errChan <- grpcServer.Serve(grpcLis)
+	}()
+
+	go func() {
+		log.Printf("Starting HTTP gateway server on %s", httpPort)
+		errChan <- httpServer.ListenAndServe()
+	}()
+
+	select {
+	case <-stop:
+		log.Println("Shutting down servers...")
+		grpcServer.GracefulStop()
+		httpServer.Shutdown(ctx)
+		return nil
+	case err := <-errChan:
+		return err
+	}
 }

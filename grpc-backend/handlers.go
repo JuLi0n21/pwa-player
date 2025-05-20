@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	_ "backend/docs"
+	v1 "backend/gen"
 
 	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -29,6 +30,8 @@ type Server struct {
 	Db     *sql.DB
 	OsuDb  *parser.OsuDB
 	Env    map[string]string
+
+	v1.UnimplementedMusicBackendServer
 }
 
 func (s *Server) registerRoutes() http.Handler {

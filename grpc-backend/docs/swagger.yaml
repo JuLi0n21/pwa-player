@@ -1,4 +1,3 @@
-basePath: /api/v1/
 definitions:
   main.ActiveSearch:
     description: ActiveSearch holds search results for a given artist
@@ -69,12 +68,8 @@ definitions:
         example: 240
         type: integer
     type: object
-host: /
 info:
   contact: {}
-  description: Server Hosting ur own osu files over a simple Api
-  title: go-osu-music-hoster
-  version: "1.0"
 paths:
   /audio/{filepath}:
     get:

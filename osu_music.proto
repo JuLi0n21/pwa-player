@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package osu.music.api.v1;
+
+option go_package = "github.com/juli0n21/osu-music/api/v1";
+
+import "google/api/annotations.proto";
+
+service MusicBackend {
+    rpc Collections(CollectionRequest) returns (CollectionResponse) {
+        option (google.api.http) = {
+            get: "/v1/collections"
+        };
+    }
+    rpc Song(SongRequest) returns (SongResponse){
+        option (google.api.http) = {
+            get: "/v1/song/{hash}"
+        };
+    }
+    rpc Artist(ArtistRequest) returns (ArtistResponse){
+        option (google.api.http) = {
+            get: "/v1/artist{artist}"
+        };
+    }
+    rpc Favorite(FavoriteRequest) returns (FavoriteResponse){
+        option (google.api.http) = {
+            get: "/v1/favorites"
+        };
+    }
+    rpc Recent(RecentRequest) returns (RecentResponse){
+        option (google.api.http) = {
+            get: "/v1/recent"
+        };
+    }
+
+    rpc Search(SearchSharedRequest) returns (SearchSharedResponse) {
+        option (google.api.http) = {
+            get: "/v1/search"
+        };
+    }
+    rpc SearchArtists(SearchArtistRequest) returns (SearchArtistResponse) {
+        option (google.api.http) = {
+            get: "/v1/search/artists"
+        };
+    }
+    rpc SearchCollections(SearchCollectionRequest) returns (SearchCollectionResponse) {
+        option (google.api.http) = {
+            get: "/v1/search/collections"
+        };
+    }
+    rpc Ping(PingRequest) returns (PingResponse) {
+    option (google.api.http) = {
+            get: "/ping"
+        };    
+    }
+}
+
+//===== songs =====
+message CollectionRequest {
+    string name = 1;
+    int32 index = 2;
+}
+
+message CollectionResponse {
+    string name = 1;
+    int32 items = 2;
+    repeated Song songs = 3;
+}
+
+
+message SongRequest {
+    string hash = 1;
+}
+
+message SongResponse {
+    repeated Song songs = 1;
+}
+
+message ArtistRequest {
+    string artist = 1;
+}
+
+message ArtistResponse {
+    repeated Song songs = 1;
+}
+
+message FavoriteRequest {
+    string query = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message FavoriteResponse {
+    repeated Song songs = 1;
+}
+
+message RecentRequest {
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message RecentResponse {
+    repeated Song songs = 1;
+}
+
+//===== search =====
+message SearchSharedRequest {
+    string query = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message SearchSharedResponse {
+    string artist = 1;
+    repeated Song = 2;
+}
+
+message SearchArtistRequest {
+    string query = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message SearchArtistResponse {
+    string artist = 1;
+    int32 items = 2;
+}
+
+message SearchCollectionRequest {
+    string query = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message SearchCollectionResponse {
+    string name = 1;
+    string image = 2;
+    int32 items = 3;
+}
+
+//===== status =====
+message PingRequest {
+    string ping = 1;
+}
+
+message PingResponse {
+    string pong = 1;
+}
+
+//===== models =====
+message Song {
+    int32 beatmap_id = 1;
+    string md5_hash = 2;
+    string title = 3;
+    string artist = 4;
+    string creator = 5;
+    string folder = 6;
+    string file = 7;
+    string audio = 8;
+    int64 total_time = 9;
+    string image = 10;
+}

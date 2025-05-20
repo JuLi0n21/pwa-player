@@ -1,13 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Server Hosting ur own osu files over a simple Api",
-        "title": "go-osu-music-hoster",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "/",
-    "basePath": "/api/v1/",
     "paths": {
         "/audio/{filepath}": {
             "get": {

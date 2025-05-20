@@ -251,7 +251,7 @@ func Oauth(w http.ResponseWriter, r *http.Request) {
 				var copyText = document.getElementById("myInput");
 				copyText.select();
 				copyText.setSelectionRange(0, 99999); // For mobile devices
-				  navigator.clipboard.writeText(copyText.value);
+				navigator.clipboard.writeText(copyText.value);
 			}
 
 			window.close(); // Close the window after copy
