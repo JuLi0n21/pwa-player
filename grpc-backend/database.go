@@ -330,7 +330,7 @@ func getBeatmapCount(db *sql.DB) int {
 }
 
 func getRecent(db *sql.DB, limit, offset int) ([]Song, error) {
-	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?", limit, offset)
+	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap GROUP BY Folder ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
 		return []Song{}, err
 	}

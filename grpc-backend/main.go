@@ -193,8 +193,8 @@ func runGrpcAndGateway(s *Server, port string) error {
 	mux := &http.ServeMux{}
 
 	mux.HandleFunc("/callback/", s.callback)
-	mux.HandleFunc("api/v1/audio/{filepath}", s.songFile)
-	mux.HandleFunc("api/v1/image/{filepath}", s.imageFile)
+	mux.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
+	mux.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
 
 	fileServer := http.FileServer(http.Dir("gen/swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fileServer))
