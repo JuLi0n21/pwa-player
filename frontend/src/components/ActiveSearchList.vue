@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Song, CollectionPreview } from '../script/types'
-import { useAudioStore } from '@/stores/audioStore';
+import { useAudio } from '@/composables/useAudio';
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-const audioStore = useAudioStore()
+const audioStore = useAudio()
 
 const props = defineProps<{
   songs: Song[];

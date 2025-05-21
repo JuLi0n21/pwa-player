@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Song, CollectionPreview, Me } from '@/script/types';
+import { useApi } from '@/composables/useApi';
 
 export const useUserStore = defineStore('userStore', () => {
+const { musicApi } = useApi();
+
   const userId = ref(null)
   const baseUrl = ref('https://service.illegalesachen.download')
   const proxyUrl = ref('https://proxy.illegalesachen.download')

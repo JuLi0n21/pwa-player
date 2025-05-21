@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Song, CollectionPreview } from '../script/types'
 import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore';
 import CollectionListItem from '../components/CollectionListItem.vue'
+import { useUser } from '@/composables/useUser';
 
-const userStore = useUserStore();
+const userStore = useUser();
 
 const collections = ref<CollectionPreview[]>([]);
 const limit = ref(10);

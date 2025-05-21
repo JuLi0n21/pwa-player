@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import SongItem from '../components/SongItem.vue'
 
-import type { Song, CollectionPreview } from '../script/types'
+import { type Song, type CollectionPreview, mapApiToSongs } from '../script/types'
 import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore';
 import { useRoute } from 'vue-router';
-import CollectionListItem from '../components/CollectionListItem.vue'
-import { useAudioStore } from '@/stores/audioStore';
+import { useAudio } from '@/composables/useAudio';
+import { useUser } from '@/composables/useUser';
+import { useApi } from '@/composables/useApi';
 
-const route = useRoute();
-const userStore = useUserStore();
-const audioStore = useAudioStore();
+const userStore = useUser();
+const audioStore = useAudio();
+const { musicApi } = useApi();
+const api = musicApi()
+
 
 const songs = ref<Song[]>([]);
 const name = ref('name');
@@ -23,19 +25,23 @@ const fetchRecent = async () => {
   if (isLoading.value) return;
 
   isLoading.value = true;
-  const data = await userStore.fetchRecent(limit.value, offset.value);
-
-  data.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
-    song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
-  });
+  try {
+      const response = await api.musicBackendRecent(limit.value, offset.value);
+      if (response.data.songs) {
+        let newSongs = mapApiToSongs(response.data.songs);
 
   offset.value += limit.value;
-  console.log(data)
-  songs.value = [...songs.value, ...data];
+  songs.value = [...songs.value, ...newSongs];
+
+  console.log(offset.value)
 
   isLoading.value = false;
   audioStore.setCollection(songs.value);
+      }
+    } catch (error) {
+      console.error('Failed to load songs:', error)
+  }
+
 }
 
 

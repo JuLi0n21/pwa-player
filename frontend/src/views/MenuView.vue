@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useHeaderStore } from '@/stores/headerStore';
 
 const route = useRoute();
 
@@ -9,7 +7,6 @@ function isActive(path: string) {
   return route.path === path ? 'bg-blue-500 text-white' : '';
 };
 
-const headerStore = useHeaderStore();
 </script>
 
 <template>

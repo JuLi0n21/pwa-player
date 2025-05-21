@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps } from 'vue'
-import { useAudioStore } from '@/stores/audioStore';
-import { useUserStore } from '@/stores/userStore';
+import { useAudio } from '@/composables/useAudio';
 import type { Song } from '@/script/types';
 
 const props = defineProps<{
@@ -10,8 +8,7 @@ const props = defineProps<{
   info?: string,
   border?: string,
 }>();
-const userStore = useUserStore();
-const audioStore = useAudioStore();
+const audioStore = useAudio();
 
 function updateSong() {
 

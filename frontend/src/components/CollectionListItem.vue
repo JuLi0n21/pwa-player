@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
 import type { CollectionPreview } from '@/script/types';
-import { useUserStore } from '@/stores/userStore';
-import { useAudioStore } from '@/stores/audioStore';
-const userStore = useUserStore();
-const audioStore = useAudioStore();
+
 const props = defineProps<{ collection: CollectionPreview }>();
 
 

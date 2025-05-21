@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { useUser } from '@/composables/useUser';
 
-import { useUserStore } from '@/stores/userStore';
 
-const userStore = useUserStore();
+const userStore = useUser();
 
 </script>
 
@@ -10,7 +10,7 @@ const userStore = useUserStore();
   <hr>
   <nav class="flex justify-around my-2 text-sm md:text-2xl">
     <RouterLink class="p-1 rounded-full backdrop--light shadow-xl hover:text-pink-500" to="/me">
-      <img :src="userStore.User ? userStore.User.avatar_url : 'https://osu.ppy.sh/images/layout/avatar-guest.png'"
+      <img :src="userStore.user.value?.avatar_url || 'https://osu.ppy.sh/images/layout/avatar-guest.png'"
         class="md:h-12 h-6 rounded-full">
     </RouterLink>
 

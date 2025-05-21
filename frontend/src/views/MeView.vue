@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore';
 import SongItem from '../components/SongItem.vue'
-import { useAudioStore } from '@/stores/audioStore';
+import { useAudio } from '@/composables/useAudio';
+import { useUser } from '@/composables/useUser';
+import type { Me } from '@/script/types';
 
-const audioStore = useAudioStore();
-const userStore = useUserStore();
+const audioStore = useAudio();
+const userStore = useUser();
 
 const bgColor = ref('');
 const actionColor = ref('');
@@ -16,7 +17,7 @@ const loginStatus = ref('Login');
 
 function update() {
   var input = document.getElementById("url-input") as HTMLInputElement;
-  userStore.baseUrl = input.value;
+  userStore.baseUrl.value = input.value;
 
 }
 
@@ -50,7 +51,7 @@ async function getMe() {
 
   console.log("active user: ", data.name)
   userStore.setUser(data);
-  userStore.setBaseUrl(data.endpoint);
+  userStore.baseUrl.value(data.endpoint);
 
 }
 
@@ -87,15 +88,15 @@ function reset() {
 
   <main class="flex-1 flex flex-col overflow-scroll">
     <h1> Meeeeee </h1>
-    <input @change="update" type="text" id="url-input" :value="userStore.baseUrl" disabled />
+    <input @change="update" type="text" id="url-input" :value="userStore.baseUrl.value" disabled />
     <br>
-    <button v-if="!userStore.User" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
-    <div v-if="userStore.User" class="flex p-5 justify-between">
-      <img :src="userStore.User.avatar_url" class="w-1/3">
+    <button v-if="!userStore.user.value" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
+    <div v-if="userStore.user.value" class="flex p-5 justify-between">
+      <img :src="userStore.user.value.avatar_url" class="w-1/3">
       <div>
-        <p>{{ userStore.User.name }}</p>
-        <p>{{ userStore.User.endpoint == "" ? 'Not Connected' : 'Connected' }}</p>
-        <p>Sharing: <button @click="share" class="border bordercolor rounded-lg p-0.5">{{ userStore.User.share
+        <p>{{ userStore.user.value.name }}</p>
+        <p>{{ userStore.user.value.endpoint == "" ? 'Not Connected' : 'Connected' }}</p>
+        <p>Sharing: <button @click="share" class="border bordercolor rounded-lg p-0.5">{{ userStore.user.value.share
             }}</button></p>
         <button @click="getMe" class="border bordercolor rounded-lg p-0.5"> Refresh
         </button>

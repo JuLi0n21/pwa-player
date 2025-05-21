@@ -6,15 +6,12 @@ import MenuView from '@/views/MenuView.vue'
 import Footer from '@/components/Footer.vue'
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { defineStore } from 'pinia'
-import { useHeaderStore } from '@/stores/headerStore';
 import { isMobile, isPc } from './script/utils.ts'
+import { useAudio } from './composables/useAudio.ts'
 
-const headerStore = useHeaderStore();
-
-const showFooter = ref(true);
 const showNowPlaying = ref(true);
 const route = useRoute();
+const audio = useAudio();
 
 watch(route, async (to) => {
 
@@ -23,13 +20,13 @@ watch(route, async (to) => {
   } else {
     showNowPlaying.value = true;
   }
-
+/*
   if (route.path.startsWith("/menu")) {
     headerStore.hide();
   } else {
     headerStore.show();
   }
-
+*/
 })
 
 function loadColors() {
@@ -57,22 +54,17 @@ const checkScreenSize = () => {
 };
 
 onMounted(() => {
-  checkScreenSize(); // Initial check
-
-
+  checkScreenSize();
   window.addEventListener('resize', checkScreenSize);
 });
 
 onUnmounted(() => {
-  // Clean up the listener when component is destroyed
   window.removeEventListener('resize', checkScreenSize);
 });
 
 </script>
 
 <template>
-
-
   <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen wrapper info text-xl ">
 
     <RouterView />

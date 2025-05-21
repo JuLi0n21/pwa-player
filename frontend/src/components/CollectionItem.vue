@@ -1,52 +1,36 @@
 <script setup lang="ts">
 import SongItem from '../components/SongItem.vue'
-import type { Song, CollectionPreview } from '../script/types'
+import type { Song } from '../script/types'
 import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
 import CollectionListItem from '../components/CollectionListItem.vue'
-import { useAudioStore } from '@/stores/audioStore';
+import { useAudio } from '@/composables/useAudio'
+import { useApi } from '@/composables/useApi'
 
-const route = useRoute();
-const userStore = useUserStore();
-const audioStore = useAudioStore();
+const route = useRoute()
+const audioStore = useAudio()
+const { musicApi } = useApi()
 
-const songs = ref<Song[]>([]);
-const name = ref('name');
+const songs = ref<Song[]>([])
+const name = ref('name')
 
 onMounted(async () => {
-  const data = await userStore.fetchCollection(Number(route.params.id));
-  console.log(data)
+  try {
+    const response = await musicApi().musicBackendCollections(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) // Adjust method name if needed
 
-  data.songs.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}`;
-    song.url = `${userStore.baseUrl}/api/v1/audio/${song.url}`;
-  });
+    const base = import.meta.env.VITE_MUSIC_API_URL || 'http://localhost:8080'
 
-  name.value = data.name;
-  songs.value = data.songs;
+    response.songs.forEach(song => {
+      song.previewimage = `${base}/api/v1/images/${song.previewimage}`
+      song.url = `${base}/api/v1/audio/${song.url}`
+    })
 
-  audioStore.setCollection(songs.value)
-});
+    name.value = response.name
+    songs.value = response.songs
 
+    audioStore.setCollection(songs.value)
+  } catch (error) {
+    console.error('Error fetching collection:', error)
+  }
+})
 </script>
-
-<template>
-  <header>
-    <div class="wrapper">
-      <nav class="flex justify-start my-2 mx-1 space-x-1">
-        <RouterLink class="p-1 rounded-full backdrop--light shadow-xl" to="/menu/collections"><i
-            class="fa-solid fa-arrow-left"></i>
-        </RouterLink>
-        <h1 class="px-8 text-nowrap overflow-scroll absolute left-0 right-0 text-center"> {{ name }} </h1>
-
-      </nav>
-      <hr>
-    </div>
-  </header>
-
-  <div class="flex-1 flex-col h-full overflow-scroll">
-
-    <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
-  </div>
-</template>
