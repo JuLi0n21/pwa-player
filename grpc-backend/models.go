@@ -1,5 +1,7 @@
 package main
 
+import v1 "backend/gen"
+
 // Song represents a song entity
 // @Description Song represents a song with metadata
 type Song struct {
@@ -15,12 +17,53 @@ type Song struct {
 	Image     string `json:"image" example:"cover.jpg"`
 }
 
+func (song Song) toProto() *v1.Song {
+	return &v1.Song{
+		BeatmapId: int32(song.BeatmapID),
+		Md5Hash:   song.MD5Hash,
+		Title:     song.Title,
+		Artist:    song.Artist,
+		Creator:   song.Creator,
+		Folder:    song.Folder,
+		File:      song.File,
+		Audio:     song.Audio,
+		TotalTime: song.TotalTime,
+		Image:     song.Image,
+	}
+}
+
+func toProtoSongs(local []Song) []*v1.Song {
+	songs := make([]*v1.Song, len(local))
+	for i, s := range local {
+		songs[i] = s.toProto()
+	}
+
+	return songs
+}
+
 // CollectionPreview represents a preview of a song collection
 // @Description CollectionPreview contains summary data of a song collection
 type CollectionPreview struct {
 	Name  string `json:"name" example:"Collection Name"`
 	Image string `json:"image" example:"cover.jpg"`
 	Items int    `json:"items" example:"10"`
+}
+
+func (c CollectionPreview) toProto() *v1.CollectionPreview {
+	return &v1.CollectionPreview{
+		Name:  c.Name,
+		Image: c.Image,
+		Items: int32(c.Items),
+	}
+}
+
+func toProtoCollectionPreview(local []CollectionPreview) []*v1.CollectionPreview {
+	collection := make([]*v1.CollectionPreview, len(local))
+	for i, c := range local {
+		collection[i] = c.toProto()
+	}
+
+	return collection
 }
 
 // Collection represents a full song collection
@@ -43,4 +86,20 @@ type ActiveSearch struct {
 type Artist struct {
 	Artist string `json:"artist" example:"Miku"`
 	Count  int    `json:"count" example:"21"`
+}
+
+func (a Artist) toProto() *v1.Artist {
+	return &v1.Artist{
+		Artist: a.Artist,
+		Items:  int32(a.Count),
+	}
+}
+
+func toProtoArtist(local []Artist) []*v1.Artist {
+	artists := make([]*v1.Artist, len(local))
+	for i, a := range local {
+		artists[i] = a.toProto()
+	}
+
+	return artists
 }

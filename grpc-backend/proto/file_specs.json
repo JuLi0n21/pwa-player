@@ -1,0 +1,46 @@
+{
+  "paths": {
+    "/api/v1/audio/{filepath}": {
+      "get": {
+        "summary": "Serve audio files (base64-encoded path)",
+        "parameters": [
+          {
+            "name": "filepath",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Base64-encoded file path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audio file content"
+          }
+        }
+      }
+    },
+    "/api/v1/image/{filepath}": {
+      "get": {
+        "summary": "Serve image files (base64-encoded path)",
+        "parameters": [
+          {
+            "name": "filepath",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Base64-encoded file path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image file content"
+          }
+        }
+      }
+    }
+  }
+}

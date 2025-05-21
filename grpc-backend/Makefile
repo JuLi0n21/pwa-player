@@ -15,6 +15,8 @@ PROTOC_GEN_OPENAPIV2 ?= protoc-gen-openapiv2
 all: generate
 
 generate:
+	cp ../osu_music.proto proto/osu_music.proto
+
 	$(PROTOC) \
 		-I $(PROTO_DIR) \
 		-I $(GOOGLEAPIS_DIR) \

@@ -78,7 +78,6 @@ func main() {
 		Env:    envMap,
 	}
 
-	// Run gRPC + grpc-gateway servers
 	if err := runGrpcAndGateway(s, port); err != nil {
 		log.Fatalf("Failed to run servers: %v", err)
 	}
@@ -169,15 +168,15 @@ func sendUrl(endpoint, cookie string) error {
 }
 
 func runGrpcAndGateway(s *Server, port string) error {
-	grpcPort := ":9090" // gRPC server port
-	httpPort := port    // REST gateway port (e.g. ":8080")
+	grpcPort := ":9090"
+	httpPort := port
 
 	grpcLis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", grpcPort, err)
 	}
 	grpcServer := grpc.NewServer()
-	v1.RegisterMusicBackendServer(grpcServer, s) // Register your service implementation
+	v1.RegisterMusicBackendServer(grpcServer, s)
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -191,19 +190,24 @@ func runGrpcAndGateway(s *Server, port string) error {
 		return fmt.Errorf("failed to register grpc-gateway: %w", err)
 	}
 
-	mux := http.NewServeMux()
+	mux := &http.ServeMux{}
 
-	mux.Handle("/api/v1/", gwMux)
-
-	mux.HandleFunc("/files", s.songFile)
+	mux.HandleFunc("/callback/", s.callback)
+	mux.HandleFunc("api/v1/audio/{filepath}", s.songFile)
+	mux.HandleFunc("api/v1/image/{filepath}", s.imageFile)
 
 	fileServer := http.FileServer(http.Dir("gen/swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fileServer))
 
 	httpServer := &http.Server{
 		Addr:    httpPort,
-		Handler: mux,
+		Handler: corsMiddleware(logRequests(mux)),
 	}
+
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("HTTP %s %s", r.Method, r.URL.Path)
+		gwMux.ServeHTTP(w, r)
+	}))
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)

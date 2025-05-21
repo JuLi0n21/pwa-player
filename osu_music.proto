@@ -9,49 +9,49 @@ import "google/api/annotations.proto";
 service MusicBackend {
     rpc Collections(CollectionRequest) returns (CollectionResponse) {
         option (google.api.http) = {
-            get: "/v1/collections"
+            get: "/api/v1/collections"
         };
     }
     rpc Song(SongRequest) returns (SongResponse){
         option (google.api.http) = {
-            get: "/v1/song/{hash}"
+            get: "/api/v1/song/{hash}"
         };
     }
     rpc Artist(ArtistRequest) returns (ArtistResponse){
         option (google.api.http) = {
-            get: "/v1/artist{artist}"
+            get: "/api/v1/artist/{artist}"
         };
     }
     rpc Favorite(FavoriteRequest) returns (FavoriteResponse){
         option (google.api.http) = {
-            get: "/v1/favorites"
+            get: "/api/v1/favorites"
         };
     }
     rpc Recent(RecentRequest) returns (RecentResponse){
         option (google.api.http) = {
-            get: "/v1/recent"
+            get: "/api/v1/recent"
         };
     }
 
     rpc Search(SearchSharedRequest) returns (SearchSharedResponse) {
         option (google.api.http) = {
-            get: "/v1/search"
+            get: "/api/v1/search"
         };
     }
     rpc SearchArtists(SearchArtistRequest) returns (SearchArtistResponse) {
         option (google.api.http) = {
-            get: "/v1/search/artists"
+            get: "/api/v1/search/artists"
         };
     }
     rpc SearchCollections(SearchCollectionRequest) returns (SearchCollectionResponse) {
         option (google.api.http) = {
-            get: "/v1/search/collections"
+            get: "/api/v1/search/collections"
         };
     }
     rpc Ping(PingRequest) returns (PingResponse) {
     option (google.api.http) = {
             get: "/ping"
-        };    
+        };
     }
 }
 
@@ -59,6 +59,8 @@ service MusicBackend {
 message CollectionRequest {
     string name = 1;
     int32 index = 2;
+    int32 limit = 3;
+    int32 offset = 4;
 }
 
 message CollectionResponse {
@@ -73,7 +75,7 @@ message SongRequest {
 }
 
 message SongResponse {
-    repeated Song songs = 1;
+    Song song = 1;
 }
 
 message ArtistRequest {
@@ -112,7 +114,7 @@ message SearchSharedRequest {
 
 message SearchSharedResponse {
     string artist = 1;
-    repeated Song = 2;
+    repeated Song songs = 2;
 }
 
 message SearchArtistRequest {
@@ -122,6 +124,10 @@ message SearchArtistRequest {
 }
 
 message SearchArtistResponse {
+    repeated Artist Artists = 1;    
+}
+
+message Artist {
     string artist = 1;
     int32 items = 2;
 }
@@ -133,11 +139,15 @@ message SearchCollectionRequest {
 }
 
 message SearchCollectionResponse {
+    repeated CollectionPreview collections = 1; 
+}
+
+message CollectionPreview {
     string name = 1;
     string image = 2;
     int32 items = 3;
-}
 
+}
 //===== status =====
 message PingRequest {
     string ping = 1;
