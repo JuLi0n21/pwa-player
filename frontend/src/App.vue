@@ -11,7 +11,8 @@ import { useAudio } from './composables/useAudio.ts'
 
 const showNowPlaying = ref(true);
 const route = useRoute();
-const audio = useAudio();
+const audioRef = ref<HTMLAudioElement | null>(null)
+const audio = useAudio(audioRef);
 
 watch(route, async (to) => {
 
@@ -61,32 +62,29 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize);
 });
-
 </script>
-
 <template>
-  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen wrapper info text-xl ">
-
+  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen wrapper info text-xl">
     <RouterView />
-
     <NowPlaying v-show="showNowPlaying" />
-
     <Footer />
   </div>
-  <div v-if="!screenInfo.isSmall" class="flex flex-col h-screen max-h-screen wrapper info text-xl ">
+
+  <div v-else class="flex flex-col h-screen max-h-screen wrapper info text-xl">
     <main class="flex flex-1 w-full h-full overflow-y-scroll">
-      <div class="w-1/12">
-        <MenuView />
-      </div>
-      <div class="flex-1 overflow-y-scroll">
-        <RouterView />
-      </div>
-      <div class="w-1/5">
-        <NowPlayingView />
-      </div>
-    </main>
+      
+      <aside class="w-1/12 bg-primary p-4">
+        <p>Sidebar content</p>
+      </aside>
 
+      <section class="flex-1 overflow-y-scroll p-4">
+        <RouterView />
+      </section>
+
+      <section class="w-1/5 p-4">
+        <NowPlayingView />
+      </section>
+    </main>
     <Footer />
   </div>
-
 </template>

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { mapApiToSongs, type Song } from '../script/types'
+import { mapApiToSongs, mapToSong, type Song } from '../script/types'
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ActiveSearchList from '../components/ActiveSearchList.vue'
 import SongItem from '../components/SongItem.vue'
 import { useAudio } from '@/composables/useAudio'
 import { useUser } from '@/composables/useUser'
-import { MusicBackendApi } from '@/generated'
 import { useApi } from '@/composables/useApi'
 
 const router = useRouter()
@@ -43,7 +42,9 @@ async function fetchActiveSearch(term: string) {
 }
 
 async function fetchSearchArtist(artist: string) {
-  const data = await musicApi.MusicBackend_SearchArtists(artist)
+  const response = await api.musicBackendArtist(artist)
+  
+  const data = mapApiToSongs(response.data.songs)
 
   data.forEach((song: Song) => {
     song.previewimage = `${userStore.baseUrl.value}/api/v1/images/${song.previewimage}`
@@ -72,7 +73,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for artist query changes
 watch(() => route.query.a, async (newArtist) => {
   if (newArtist) {
     await fetchSearchArtist(newArtist as string)
@@ -81,7 +81,6 @@ watch(() => route.query.a, async (newArtist) => {
   }
 })
 
-// Search input model
 const searchInput = ref(searchTerm.value)
 
 watch(searchInput, async (val) => {

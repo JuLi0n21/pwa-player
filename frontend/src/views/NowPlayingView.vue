@@ -1,7 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useAudio } from '@/composables/useAudio';
 
 const audioStore = useAudio();
+
+const title = computed(() => audioStore.currentSong.value?.name || 'Unknown Title')
+const artist = computed(() => audioStore.currentSong.value?.artist || 'Unknown Artist')
+const bgimg = computed(() => audioStore.currentSong.value?.previewimage || '/default-bg.jpg')
+
 </script>
 
 <template>
@@ -18,55 +24,66 @@ const audioStore = useAudio();
     </div>
   </header>
 
-  <main class="flex-1 flex justify-center text-center action">
-    <div class="flex flex-col justify-around">
-      <div class="relative">
-        <i class="relative p-36 fa-solid fa-play">
+<main class="flex-1 flex flex-col items-center justify-center text-center px-4">
+  <div class="flex flex-col items-center w-full max-w-md space-y-6">
 
-          <img class="absolute top-4 left-0 bottom-0 right-0 bg-center bg-cover rounded-lg"
-            :src="encodeURI(audioStore.bgimg.value + '?h=320&w=320')" :key="audioStore.bgimg.value" />
-        </i>
-      </div>
-
-      <div class="h-1/3 flex flex-col justify-center">
-        <div class="flex-1"></div>
-        <div>
-          <div class="flex w-full justify-around">
-            <i class="fa-solid fa-backward-step text-5xl self-center" @click="audioStore.togglePrev"></i>
-            <i :class="[audioStore.isPlaying.value ? 'fa-circle-play' : 'fa-circle-pause']" class="fa-regular text-7xl "
-              @click="audioStore.togglePlay"></i>
-            <i class="fa-solid fa-forward-step text-5xl self-center" @click="audioStore.toggleNext"></i>
-          </div>
-        </div>
-        <div class="flex flex-1 justify-around ml-4">
-          <i @click="audioStore.toggleShuffle" :class="[audioStore.shuffle.value ? 'info' : '']"
-            class="fa-solid fa-shuffle"></i>
-
-          <div class="m-4 info flex-1 overflow-hidden">
-            <p>{{ audioStore.title.value }}</p>
-            <RouterLink :to="'search?a=' + audioStore.artist.value">
-
-              {{ audioStore.artist.value }}
-
-            </RouterLink>
-          </div>
-          <div class="flex flex-col justify-between mb-4 mr-4">
-            <i @click="audioStore.toggleRepeat" :class="[audioStore.repeat.value ? 'info' : '']"
-              class="fa-solid fa-repeat"></i>
-            <i @click="$router.go(-1);" class="fa-solid fa-arrow-down"></i>
-          </div>
-        </div>
-        <div class="flex">
-          <input
-            class="appearance-none mx-4 flex-1 bg-yellow-200 bg-opacity-20 accent-yellow-600 rounded-lg outline-none slider "
-            type="range" id="audio-slider" @change="audioStore.updateTime" max="100" :value="audioStore.percentDone.value">
-        </div>
-        <div class="flex justify-between mx-4">
-          <span id="current-time" class="time">{{ audioStore.currentTime.value }}</span>
-          <span id="duration" class="time ">{{ audioStore.duration.value }}</span>
-        </div>
-      </div>
+    <div class="relative w-full aspect-square">
+      <img
+        class="absolute inset-0 w-full h-full object-cover rounded-lg shadow-lg"
+        :src="encodeURI(bgimg + '?h=320&w=320')"
+        :key="bgimg"
+        alt="Album Art"
+      />
+      <i class="absolute inset-0 flex items-center justify-center text-white text-5xl">
+        <i class="fa-solid fa-play bg-black bg-opacity-50 p-4 rounded-full"></i>
+      </i>
     </div>
 
-  </main>
+    <div class="flex justify-between items-center w-full text-3xl space-x-6">
+      <i class="fa-solid fa-backward-step" @click="audioStore.togglePrevious"></i>
+      <i
+        :class="[audioStore.isPlaying.value ? 'fa-circle-pause' : 'fa-circle-play']"
+        class="fa-regular text-5xl"
+        @click="audioStore.togglePlay"
+      ></i>
+      <i class="fa-solid fa-forward-step" @click="audioStore.toggleNext"></i>
+    </div>
+
+    <div class="text-center w-full px-2">
+      <p class="truncate text-lg font-semibold">{{ title }}</p>
+      <RouterLink :to="'search?a=' + artist" class="block text-sm text-blue-500 truncate">
+        {{ artist }}
+      </RouterLink>
+    </div>
+
+    <div class="flex justify-between items-center w-full px-4">
+      <i
+        @click="audioStore.toggleShuffle"
+        :class="[audioStore.shuffle.value ? 'text-yellow-500' : '']"
+        class="fa-solid fa-shuffle"
+      ></i>
+      <i
+        @click="audioStore.toggleRepeat"
+        :class="[audioStore.repeat.value ? 'text-yellow-500' : '']"
+        class="fa-solid fa-repeat"
+      ></i>
+      <i @click="$router.go(-1)" class="fa-solid fa-arrow-down"></i>
+    </div>
+
+    <div class="w-full px-4">
+      <input
+        class="w-full appearance-none h-2 rounded-full bg-yellow-200 bg-opacity-20 accent-yellow-600 outline-none"
+        type="range"
+        @change="audioStore.updateTime"
+        :max="100"
+        :value="audioStore.percentDone.value"
+      />
+    </div>
+
+    <div class="flex justify-between text-sm w-full px-4">
+      <span>{{ audioStore.currentTime.value }}</span>
+      <span>{{ audioStore.duration.value }}</span>
+    </div>
+  </div>
+</main>
 </template>

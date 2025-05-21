@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { Song, CollectionPreview } from '../script/types'
+import { type Song, type CollectionPreview, mapApiToCollectionPreview } from '../script/types'
 import { ref, onMounted } from 'vue'
 import CollectionListItem from '../components/CollectionListItem.vue'
 import { useUser } from '@/composables/useUser';
+import { useApi } from '@/composables/useApi';
 
 const userStore = useUser();
+const { musicApi } = useApi()
+const api = musicApi()
 
 const collections = ref<CollectionPreview[]>([]);
 const limit = ref(10);
@@ -15,12 +18,11 @@ const fetchCollections = async () => {
   if (isLoading.value) return;
   isLoading.value = true;
 
-  const data = await userStore.fetchCollections(offset.value, limit.value);
-  data.forEach(song => {
-    song.previewimage = `${userStore.baseUrl}/api/v1/images/${song.previewimage}?h=80&w=80`;
-  });
-
-  collections.value = [...collections.value, ...data];
+  const response = await api.musicBackendCollections(offset.value, limit.value);
+  console.log(response.data.songs.length)
+  let songs = mapApiToCollectionPreview(response.data.songs)
+  console.log(songs)
+  collections.value = [...collections.value, ...songs];
   offset.value += limit.value;
 
   isLoading.value = false;

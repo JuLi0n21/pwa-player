@@ -13,13 +13,18 @@ export type Song = {
 const basePath = import.meta.env.BACKEND_URL || 'http://localhost:8080';
 
 export function mapToSong(apiSong: Apiv1Song): Song {
+  const image = apiSong.image;
+  const imageIsMissing = !image || image === "404.png";
+
   return {
     hash: apiSong.md5Hash,
     name: apiSong.title,
     artist: apiSong.artist,
     length: Number(apiSong.totalTime),
     url: `${basePath}/api/v1/audio/${btoa(apiSong.folder + "/" + apiSong.audio).replace(/=+$/, '')}`,
-    previewimage: `${basePath}/api/v1/image/${btoa(apiSong.image === "" || apiSong.image === undefined ? "404.png" : apiSong.image).replace(/=+$/, '')}`,
+    previewimage: imageIsMissing
+      ? "/404.gif"
+      : `${basePath}/api/v1/image/${btoa(image).replace(/=+$/, '')}`,
     mapper: apiSong.creator,
   };
 }
@@ -40,7 +45,7 @@ export function mapToCollectionPreview(
     index,
     name: apiCollection.name,
     length: apiCollection.items,
-    previewimage: `${basePath}/api/v1/images/${apiCollection.image}`,
+    previewimage: `${basePath}/api/v1/image/${apiCollection.image}`,
   };
 }
 

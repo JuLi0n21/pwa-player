@@ -87,7 +87,6 @@ function reset() {
   </header>
 
   <main class="flex-1 flex flex-col overflow-scroll">
-    <h1> Meeeeee </h1>
     <input @change="update" type="text" id="url-input" :value="userStore.baseUrl.value" disabled />
     <br>
     <button v-if="!userStore.user.value" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
@@ -108,25 +107,25 @@ function reset() {
       <div class="flex flex-1 justify-between">
         <p>Background:</p>
         <input type="color" id="bgPicker" v-model="bgColor" @input="save()"
-          class="appearance-none w-8 h-8 border border-2 p-0 overflow-hidden cursor-pointer">
+          class="appearance-none w-8 h-8 border-2 p-0 overflow-hidden cursor-pointer">
       </div>
 
       <div class="flex flex-1 justify-between">
         <p>Main:</p>
         <input type="color" id="actionPicker" v-model="actionColor" @input="save()"
-          class="appearance-none w-8 h-8 border border-2 p-0 overflow-hidden cursor-pointer">
+          class="appearance-none w-8 h-8 border-2 p-0 overflow-hidden cursor-pointer">
       </div>
 
       <div class="flex flex-1 justify-between">
         <p>Secondary:</p>
         <input type="color" id="infoPicker" v-model="infoColor" @input="save()"
-          class="appearance-none w-8 h-8 border border-2 p-0 overflow-hidden cursor-pointer">
+          class="appearance-none w-8 h-8 border-2 p-0 overflow-hidden cursor-pointer">
       </div>
 
       <div class="flex flex-1 justify-between">
         <p>Border:</p>
         <input type="color" id="borderPicker" v-model="borderColor" @input="save()"
-          class="appearance-none w-8 h-8 border border-2 p-0 overflow-hidden cursor-pointer">
+          class="appearance-none w-8 h-8 border-2 p-0 overflow-hidden cursor-pointer">
       </div>
     </div>
 

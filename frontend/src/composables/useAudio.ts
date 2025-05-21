@@ -7,214 +7,149 @@ let audioInstance: ReturnType<typeof createAudio> | null = null
 function createAudio() {
   const { musicApi } = useApi()
 
-  const songSrc = ref('https://cdn.pixabay.com/audio/2024/05/24/audio_46382ae035.mp3')
-  const artist = ref('Artist')
-  const title = ref('Title')
-  const bgimg = ref('https://assets.ppy.sh/beatmaps/2197744/covers/cover@2x.jpg?1722207959')
-  const hash = ref('0000')
+  const audioElement = document.createElement('audio')
+  audioElement.setAttribute('id', 'global-audio')
+  audioElement.setAttribute('controls', '')
+  audioElement.classList.add('hidden')
+  document.body.appendChild(audioElement)
 
-  const isPlaying = ref(false)
-  const duration = ref('0:00')
-  const currentTime = ref('0:00')
-  const percentDone = ref(0)
-
-  const shuffle = ref(false)
-  const repeat = ref(false)
-
-  const activeCollection = ref<Song[]>([])
-  const currentSong = ref<Song | null>(null)
-
-  function saveSongToLocalStorage(song: Song) {
-    console.log(song)
-    localStorage.setItem('lastPlayedSong', JSON.stringify(song))
+  const state = {
+    isPlaying: ref(false),
+    duration: ref('0:00'),
+    currentTime: ref('0:00'),
+    percentDone: ref(0),
+    shuffle: ref(false),
+    repeat: ref(false),
+    activeSongs: ref<Song[] | null>([]),
+    currentSong: ref<Song | null>(null),
   }
 
-  function loadSongFromLocalStorage(): Song | null {
-    const song = localStorage.getItem('lastPlayedSong')
-    return song ? JSON.parse(song) : null
+  function saveToLocalStorage(key: string, data: any) {
+    localStorage.setItem(key, JSON.stringify(data))
   }
 
-  function saveCollectionToLocalStorage(collection: Song[]) {
-    localStorage.setItem('lastActiveCollection', JSON.stringify(collection))
-  }
-
-  function loadCollectionFromLocalStorage(): Song[] | null {
-    const collection = localStorage.getItem('lastActiveCollection')
-    return collection ? JSON.parse(collection) : null
-  }
-
-  function togglePlay() {
-    const audio = document.getElementById('audio-player') as HTMLAudioElement
-    if (!audio) return
-    if (audio.paused) {
-      audio.play()
-    } else {
-      audio.pause()
-    }
-  }
-
-  function update() {
-    const audio = document.getElementById('audio-player') as HTMLAudioElement
-    if (!audio) return
-
-    isPlaying.value = !audio.paused
-
-    const current_min = Math.floor(audio.currentTime / 60)
-    const current_sec = Math.floor(audio.currentTime % 60)
-    if (!isNaN(current_min) && !isNaN(current_sec)) {
-      currentTime.value = `${current_min}:${current_sec.toString().padStart(2, '0')}`
-    }
-
-    const duration_min = Math.floor(audio.duration / 60)
-    const duration_sec = Math.floor(audio.duration % 60)
-    if (!isNaN(duration_min) && !isNaN(duration_sec)) {
-      duration.value = `${duration_min}:${duration_sec.toString().padStart(2, '0')}`
-    }
-
-    const percent = (audio.currentTime / audio.duration) * 100
-    if (!isNaN(percent)) {
-      percentDone.value = percent
-    }
-
-    if (audio.ended) {
-      next()
-    }
-  }
-
-  function next() {
-    const audio = document.getElementById('audio-player') as HTMLAudioElement
-    if (!audio) return
-
-    if (repeat.value) {
-      audio.pause()
-      audio.currentTime = 0
-      audio.play()
-      return
-    }
-
-    if (shuffle.value) {
-      audio.pause()
-      const randomSong = activeCollection.value[Math.floor(Math.random() * activeCollection.value.length)]
-      setSong(randomSong)
-      audio.play()
-      return
-    }
-
-    toggleNext()
-  }
-
-  function updateTime() {
-    const audio = document.getElementById('audio-player') as HTMLAudioElement
-    const slider = document.getElementById('audio-slider') as HTMLInputElement
-    if (!audio || !slider) return
-
-    audio.currentTime = (Number(slider.value) / 100) * audio.duration
-  }
-
-  function togglePrev() {
-    const index = activeCollection.value.findIndex((s) => s.hash === hash.value)
-    if (index === -1) return
-    const prevIndex = (index - 1 + activeCollection.value.length) % activeCollection.value.length
-    setSong(activeCollection.value[prevIndex])
-  }
-
-  function toggleNext() {
-    let index = 0
-    if (shuffle.value) {
-      index = Math.floor(Math.random() * activeCollection.value.length)
-    } else {
-      index = activeCollection.value.findIndex((s) => s.hash === hash.value)
-      if (index === -1) return
-      index = (index + 1) % activeCollection.value.length
-    }
-    setSong(activeCollection.value[index])
-  }
-
-  function toggleShuffle() {
-    shuffle.value = !shuffle.value
-  }
-
-  function toggleRepeat() {
-    repeat.value = !repeat.value
+  function loadFromLocalStorage<T>(key: string): T | null {
+    const item = localStorage.getItem(key)
+    return item ? JSON.parse(item) as T : null
   }
 
   function setSong(song: Song | null) {
+    console.log(song)
     if (!song) return
+    state.currentSong.value = song
+    saveToLocalStorage('lastPlayedSong', song)
 
-    songSrc.value = song.url
-    artist.value = song.artist
-    title.value = song.name
-    bgimg.value = song.previewimage
-    hash.value = song.hash
-
-    currentSong.value = song
-    saveSongToLocalStorage(song)
-
-    const audio = document.getElementById('audio-player') as HTMLAudioElement
-    if (!audio) return
-    if (!audio.paused) audio.pause()
-    audio.src = song.url
-
-    audio.addEventListener('canplaythrough', () => {
-      audio.play().catch(console.error)
-    }, { once: true })
+    audioElement.pause()
+    audioElement.src = song.url
+    audioElement.addEventListener(
+      'canplaythrough',
+      () => audioElement.play().catch(console.error),
+      { once: true }
+    )
   }
 
-  function setCollection(songs: Song[] | null) {
-    if (!songs) return
-    activeCollection.value = songs
-    saveCollectionToLocalStorage(songs)
+  function setCollection(song: Song[] | null) {
+    if (!song) return
+    state.activeSongs.value = song
+    saveToLocalStorage('activeCollection', song)
   }
 
-  async function loadInitialCollection() {
+  function togglePlay() {
+    if (audioElement.paused) {
+      audioElement.play().catch(console.error)
+    } else {
+      audioElement.pause()
+    }
+  }
+
+function toggleNext() {
+  if (!state.activeSongs.value || !state.currentSong.value) return;
+
+  const songs = state.activeSongs.value;
+  const currentHash = state.currentSong.value.hash;
+  const currentIndex = songs.findIndex(song => song.hash === currentHash);
+
+  if (currentIndex === -1) return;
+
+  const nextIndex = (currentIndex + 1) % songs.length;
+  setSong(songs[nextIndex]);
+}
+
+function togglePrevious() {
+  if (!state.activeSongs.value || !state.currentSong.value) return;
+
+  const songs = state.activeSongs.value;
+  const currentHash = state.currentSong.value.hash;
+  const currentIndex = songs.findIndex(song => song.hash === currentHash);
+
+  if (currentIndex === -1) return;
+
+  const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+  setSong(songs[prevIndex]);
+}
+
+  function update() {
+    const { currentTime: ct, duration: dur } = audioElement
+    state.isPlaying.value = !audioElement.paused
+    state.currentTime.value = formatTime(ct)
+    state.duration.value = formatTime(dur)
+    state.percentDone.value = isNaN(dur) ? 0 : (ct / dur) * 100
+
+    if (audioElement.ended) {
+      if (state.repeat.value) {
+        audioElement.currentTime = 0
+        audioElement.play()
+      }
+    }
+  }
+
+  function formatTime(seconds: number): string {
+    const min = Math.floor(seconds / 60)
+    const sec = Math.floor(seconds % 60).toString().padStart(2, '0')
+    return `${min}:${sec}`
+  }
+
+  function updateTime() {
+    const slider = document.getElementById('audio-slider') as HTMLInputElement
+    if (slider) {
+      audioElement.currentTime = (Number(slider.value) / 100) * audioElement.duration
+    }
+  }
+
+  async function loadInitialSong() {
     try {
       const api = musicApi()
-      const response = await api.musicBackendRecent()
-      if (response.data.songs) {
-        setCollection(mapApiToSongs(response.data.songs))
+      const res = await api.musicBackendRecent()
+      let songs = mapApiToSongs(res.data.songs);
+      if (res.data?.songs?.length) {
+        setSong(songs[0])
       }
-    } catch (error) {
-      console.error('Failed to load songs:', error)
+    } catch (err) {
+      console.error('Failed to load song:', err)
     }
   }
 
   function init() {
-    setSong(loadSongFromLocalStorage())
-    setCollection(loadCollectionFromLocalStorage())
+    setSong(loadFromLocalStorage<Song>('lastPlayedSong'))
+    setCollection(loadFromLocalStorage<Song[]>('activeCollection'))
 
-    console.log(activeCollection.value)
-    console.log(currentSong.value)
-    if (!currentSong.value || activeCollection.value.length === 0) {
-      loadInitialCollection()
+    if (!state.currentSong.value) {
+      loadInitialSong()
     }
+
+    audioElement.addEventListener('timeupdate', update)
   }
 
-  onMounted(() => {
-    init()
-  })
+  onMounted(init)
 
   return {
-    songSrc,
-    artist,
-    title,
-    bgimg,
-    hash,
-    isPlaying,
-    duration,
-    currentTime,
-    percentDone,
-    shuffle,
-    repeat,
-    activeCollection,
-    currentSong,
+    ...state,
     togglePlay,
-    update,
-    next,
-    updateTime,
-    togglePrev,
+    toggleShuffle: () => (state.shuffle.value = !state.shuffle.value),
+    toggleRepeat: () => (state.repeat.value = !state.repeat.value),
     toggleNext,
-    toggleShuffle,
-    toggleRepeat,
+    togglePrevious,
+    updateTime,
     setSong,
     setCollection,
     init,

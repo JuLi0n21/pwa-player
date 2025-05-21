@@ -33,8 +33,6 @@ const fetchRecent = async () => {
   offset.value += limit.value;
   songs.value = [...songs.value, ...newSongs];
 
-  console.log(offset.value)
-
   isLoading.value = false;
   audioStore.setCollection(songs.value);
       }

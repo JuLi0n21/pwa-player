@@ -13,6 +13,7 @@ const audioStore = useAudio();
 function updateSong() {
 
   let updated = props.song;
+  console.log("updating song:", updated)
   audioStore.setSong(updated)
 }
 </script>
