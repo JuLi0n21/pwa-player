@@ -1,4 +1,6 @@
-FROM node:20 AS builder
+FROM node:24-slim AS builder
+
+RUN apt-get update && apt-get install -y openjdk-17-jre && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
