@@ -8,6 +8,7 @@ RUN npm install
 
 COPY . .
 
+RUN npm run generate
 RUN npm run build-only
 
 FROM nginx:alpine
