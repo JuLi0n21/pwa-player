@@ -74,8 +74,9 @@ const bgimg = computed(() => audioStore.currentSong.value?.previewimage || '/def
       <input
         class="w-full appearance-none h-2 rounded-full bg-yellow-200 bg-opacity-20 accent-yellow-600 outline-none"
         type="range"
-        @change="audioStore.updateTime"
+        @input="event => audioStore.updateTime(Number(event.target.value))"
         :max="100"
+        step="0.001"
         :value="audioStore.percentDone.value"
       />
     </div>

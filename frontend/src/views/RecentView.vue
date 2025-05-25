@@ -2,7 +2,7 @@
 import SongItem from '../components/SongItem.vue'
 
 import { type Song, type CollectionPreview, mapApiToSongs } from '../script/types'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router';
 import { useAudio } from '@/composables/useAudio';
 import { useUser } from '@/composables/useUser';
@@ -16,6 +16,7 @@ const api = musicApi()
 
 const songs = ref<Song[]>([]);
 const name = ref('name');
+const containerRef = ref<HTMLElement | null>(null);
 
 const limit = ref(100);
 const offset = ref(0);
@@ -46,7 +47,9 @@ const fetchRecent = async () => {
 onMounted(async () => {
   await fetchRecent();
 
-  const container = document.querySelector('.song-container');
+  await nextTick(); 
+
+  const container = containerRef.value;
   if (container) {
     container.addEventListener('scroll', async () => {
       const scrollTop = container.scrollTop;
@@ -64,11 +67,10 @@ onMounted(async () => {
 </script>
 
 <template>
-
-  <main class="flex-1 flex-col overflow-scroll">
-    <div class="flex-1 flex-col h-full overflow-scroll song-container">
-
+    <div
+      ref="containerRef"
+      class="flex-1 flex-col  overflow-y-scroll song-container"
+    >
       <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
     </div>
-  </main>
 </template>

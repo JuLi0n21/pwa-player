@@ -108,19 +108,19 @@ watch(searchInput, async (val) => {
     </div>
   </header>
 
-  <main class="flex flex-col flex-1 w-full h-full overflow-scroll">
+  <main class="flex flex-col flex-1 w-full h-full">
     <div class="relative">
       <input
         v-model="searchInput"
         placeholder="Type to Search..."
-        class="flex-1 max-h-12 search border bordercolor accent-pink-800 bg-yellow-300 bg-opacity-20 rounded-lg m-2 p-2"
+        class="w-full flex-1 max-h-12 search border bordercolor accent-pink-800 bg-yellow-300 bg-opacity-20 rounded-lg p-2"
       />
-      <div class="absolute h-16 right-4 flex flex-col justify-center cursor-pointer" @click="emptySearch">
+      <div class="absolute top-4 right-4 flex flex-col justify-center cursor-pointer" @click="emptySearch">
         <i class="far fa-times-circle opacity-50"></i>
       </div>
     </div>
 
-    <div class="relative flex flex-col w-full h-full overflow-scroll">
+    <div class="relative flex flex-col w-full h-full overflow-y-scroll">
       <div v-if="showSearch" class="absolute w-full text-center search-recommendations z-20">
         <ActiveSearchList :songs="activesongs" :artist="artists" :search="searchTerm" />
       </div>

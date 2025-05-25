@@ -16,7 +16,7 @@ onMounted(() => {
 <template>
   <div>
     <hr>
-    <div class="relative wrapper p-1 grow action">
+    <div class="relative wrapper p-1 action">
       <img :src="encodeURI(bgimg + '?h=150&w=400')" class="w-full absolute top-0 left-0 right-0 h-full"
         :style="{ 'filter': 'blur(2px)', 'opacity': '0.5' }" alt="Background Image" />
 

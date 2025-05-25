@@ -32,8 +32,6 @@ function save(bg: string | null, main: string | null, info: string | null, borde
   localStorage.setItem('actionColor', main ?? actionColor.value);
   localStorage.setItem('infoColor', info ?? infoColor.value);
   localStorage.setItem('borderColor', border ?? borderColor.value);
-
-  console.log("bg", bgColor.value, "action:", actionColor.value, "info", infoColor.value, "border", borderColor.value)
 }
 
 async function getMe() {
@@ -44,12 +42,10 @@ async function getMe() {
     console.log("redirect detected");
   }
 
-  console.log(data)
   if (data.id === null || data.id === undefined || Object.keys(data).length === 0) {
     return
   }
 
-  console.log("active user: ", data.name)
   userStore.setUser(data);
   userStore.baseUrl.value(data.endpoint);
 
@@ -86,7 +82,7 @@ function reset() {
     </div>
   </header>
 
-  <main class="flex-1 flex flex-col overflow-scroll">
+  <main class="flex-1 flex flex-col h-full overflow-y-scroll">
     <input @change="update" type="text" id="url-input" :value="userStore.baseUrl.value" disabled />
     <br>
     <button v-if="!userStore.user.value" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
@@ -128,10 +124,9 @@ function reset() {
           class="appearance-none w-8 h-8 border-2 p-0 overflow-hidden cursor-pointer">
       </div>
     </div>
-
     <div class="w-full p-2">
       <p>Current</p>
-      <SongItem :song="audioStore.currentSong" />
+      <SongItem :song="audioStore.currentSong.value" />
     </div>
 
     <div class="w-full p-2 bg-black">
@@ -139,14 +134,14 @@ function reset() {
           class="border rounded-lg p-0.5" @click="save('#000000', '#5e2d8f', '#57db5d', '#b3002d')">Choose
         </button>
       </p>
-      <SongItem :song="audioStore.currentSong" :border="'#b3002d'" :action="'#5e2d8f'" :info="'#57db5d'" />
+      <SongItem :song="audioStore.currentSong.value" :border="'#b3002d'" :action="'#5e2d8f'" :info="'#57db5d'" />
     </div>
     <div class="w-full p-2" style="background-color: #1c1719">
       <p class="flex-1 flex justify-between" style=" color : #ec4889">Default<button style="border-color : #ec4889"
           class="border rounded-lg p-0.5" @click="save('#1c1719', '#eab308', '#ec4889', '#ec4889')">Choose
         </button>
       </p>
-      <SongItem :song="audioStore.currentSong" :border="'#ec4889'" :info="'#ec4889'" :action="'#eab308'" />
+      <SongItem :song="audioStore.currentSong.value" :border="'#ec4889'" :info="'#ec4889'" :action="'#eab308'" />
     </div>
 
     <div class="w-full p-2" style="background-color: #ff4c4c">
@@ -155,7 +150,7 @@ function reset() {
         <button style="border-color: #ffffff" class="border rounded-lg p-0.5"
           @click="save('#ff4c4c', '#ffcc00', '#ffffff', '#ffffff')">Choose</button>
       </p>
-      <SongItem :song="audioStore.currentSong" :border="'#ffffff'" :info="'#ffffff'" :action="'#ffcc00'" />
+      <SongItem :song="audioStore.currentSong.value" :border="'#ffffff'" :info="'#ffffff'" :action="'#ffcc00'" />
     </div>
 
     <div class="w-full p-2" style="background-color: #003d00">
@@ -164,7 +159,7 @@ function reset() {
         <button style="border-color: #e0f8d8" class="border rounded-lg p-0.5"
           @click="save('#003d00', '#a8d5a2', '#e0f8d8', '#e0f8d8')">Choose</button>
       </p>
-      <SongItem :song="audioStore.currentSong" :border="'#e0f8d8'" :info="'#e0f8d8'" :action="'#a8d5a2'" />
+      <SongItem :song="audioStore.currentSong.value" :border="'#e0f8d8'" :info="'#e0f8d8'" :action="'#a8d5a2'" />
     </div>
 
     <div class="w-full p-2" style="background-color: #00274d">
@@ -173,7 +168,7 @@ function reset() {
         <button style="border-color: #00ffff" class="border rounded-lg p-0.5"
           @click="save('#00274d', '#0099ff', '#00ffff', '#00ffff')">Choose</button>
       </p>
-      <SongItem :song="audioStore.currentSong" :border="'#00ffff'" :info="'#00ffff'" :action="'#0099ff'" />
+      <SongItem :song="audioStore.currentSong.value" :border="'#00ffff'" :info="'#00ffff'" :action="'#0099ff'" />
     </div>
 
   </main>

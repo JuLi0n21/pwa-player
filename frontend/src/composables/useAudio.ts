@@ -22,6 +22,7 @@ function createAudio() {
     repeat: ref(false),
     activeSongs: ref<Song[] | null>([]),
     currentSong: ref<Song | null>(null),
+    recentlyPlayed: ref(new Map<string, Song>()),
   }
 
   function saveToLocalStorage(key: string, data: any) {
@@ -34,11 +35,17 @@ function createAudio() {
   }
 
   function setSong(song: Song | null) {
-    console.log(song)
     if (!song) return
     state.currentSong.value = song
-    saveToLocalStorage('lastPlayedSong', song)
+    const map = state.recentlyPlayed.value;
 
+
+    saveToLocalStorage('lastPlayedSong', song)
+    if (map.has(song.hash)) {
+      map.delete(song.hash);
+    }
+    map.set(song.hash, song);
+   
     audioElement.pause()
     audioElement.src = song.url
     audioElement.addEventListener(
@@ -66,6 +73,11 @@ function toggleNext() {
   if (!state.activeSongs.value || !state.currentSong.value) return;
 
   const songs = state.activeSongs.value;
+
+  if(state.shuffle.value){
+    setSong(songs[Math.floor(Math.random() * songs.length)]);
+  }
+
   const currentHash = state.currentSong.value.hash;
   const currentIndex = songs.findIndex(song => song.hash === currentHash);
 
@@ -99,8 +111,13 @@ function togglePrevious() {
       if (state.repeat.value) {
         audioElement.currentTime = 0
         audioElement.play()
+        return
       }
+
+      toggleNext();
     }
+
+
   }
 
   function formatTime(seconds: number): string {
@@ -109,11 +126,8 @@ function togglePrevious() {
     return `${min}:${sec}`
   }
 
-  function updateTime() {
-    const slider = document.getElementById('audio-slider') as HTMLInputElement
-    if (slider) {
-      audioElement.currentTime = (Number(slider.value) / 100) * audioElement.duration
-    }
+  function updateTime(value: number) {
+    if (value) audioElement.currentTime = (Number(value) / 100) * audioElement.duration
   }
 
   async function loadInitialSong() {

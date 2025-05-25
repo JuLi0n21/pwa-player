@@ -3,7 +3,7 @@ import SongItem from '../components/SongItem.vue'
 </script>
 
 <template>
-  <main class="flex-1 flex-col overflow-scroll">
+  <main class="flex-1 flex-col overflow-y-scroll">
     <p>Coming Soon...</p>
   </main>
 </template>
