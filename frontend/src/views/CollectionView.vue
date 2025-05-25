@@ -18,8 +18,8 @@ const fetchCollections = async () => {
   if (isLoading.value) return;
   isLoading.value = true;
 
-  const response = await api.musicBackendCollections(offset.value, limit.value);
-  let songs = mapApiToCollectionPreview(response.data.songs)
+  const response = await api.musicBackendSearchCollections("", limit.value, offset.value);
+  let songs = mapApiToCollectionPreview(response.data.collections)
   collections.value = [...collections.value, ...songs];
   offset.value += limit.value;
 
@@ -46,8 +46,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="flex-1 text-center flex flex-col h-full overflow-y-scroll">
-    <div class="flex flex-col overflow-scroll collection-container">
+  <main class="flex-1 text-center flex flex-col h-full overflow-y-hidden">
+    <div class="flex flex-col overflow-y-scroll collection-container">
       <CollectionListItem v-for="(collection, index) in collections" :key="index" :collection="collection" />
     </div>
   </main>

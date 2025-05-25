@@ -3,15 +3,11 @@ import type { CollectionPreview } from '@/script/types';
 
 const props = defineProps<{ collection: CollectionPreview }>();
 
-
-function hi() {
-}
-
 </script>
 
 <template>
 
-  <RouterLink @click.navtive="hi" :to="'/collection/' + props.collection.index">
+  <RouterLink :to="'/collection/' + props.collection.index +1">
     <div class=" border bordercolor rounded-lg flex">
       <img class="h-20 w-20 m-2 rounded-lg" :src="props.collection.previewimage" loading="lazy" />
       <div class="flex flex-col">

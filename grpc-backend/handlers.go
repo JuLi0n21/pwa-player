@@ -110,7 +110,6 @@ func (s *Server) Recent(ctx context.Context, req *v1.RecentRequest) (*v1.RecentR
 
 func (s *Server) Favorite(ctx context.Context, req *v1.FavoriteRequest) (*v1.FavoriteResponse, error) {
 
-	
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 	favorites, err := getFavorites(s.Db, req.Query, limit, offset)
@@ -125,10 +124,9 @@ func (s *Server) Favorite(ctx context.Context, req *v1.FavoriteRequest) (*v1.Fav
 }
 
 func (s *Server) Collections(ctx context.Context, req *v1.CollectionRequest) (*v1.CollectionResponse, error) {
-	
+
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
-	
 
 	name := req.Name
 	if name != "" {
@@ -143,12 +141,13 @@ func (s *Server) Collections(ctx context.Context, req *v1.CollectionRequest) (*v
 			Name:  c.Name,
 		}, nil
 	}
-
+	fmt.Println(limit, offset, req.Index)
 	c, err := getCollection(s.Db, limit, offset, int(req.Index))
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("failed to fetch collection with index: %d", req.Index))
 	}
+	fmt.Println(c)
 	return &v1.CollectionResponse{
 		Songs: toProtoSongs(c.Songs),
 		Items: int32(c.Items),
@@ -163,10 +162,8 @@ func (s *Server) Search(ctx context.Context, req *v1.SearchSharedRequest) (*v1.S
 		return nil, status.Error(codes.InvalidArgument, "query cant be empty")
 	}
 
-
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
-	
 
 	search, err := getSearch(s.Db, q, limit, offset)
 	if err != nil {
@@ -182,15 +179,11 @@ func (s *Server) Search(ctx context.Context, req *v1.SearchSharedRequest) (*v1.S
 
 func (s *Server) SearchCollections(ctx context.Context, req *v1.SearchCollectionRequest) (*v1.SearchCollectionResponse, error) {
 	q := req.Query
-	if q == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "query is required")
-	}
-
 
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
-	
 
+	fmt.Println(req)
 	preview, err := getCollections(s.Db, q, limit, offset)
 	if err != nil {
 		fmt.Println(err)

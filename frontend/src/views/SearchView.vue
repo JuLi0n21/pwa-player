@@ -27,11 +27,6 @@ async function fetchActiveSearch(term: string) {
 
   const songData = mapApiToSongs(response.data.songs)
   
-  songData.forEach((song: Song) => {
-    song.previewimage = `${userStore.baseUrl.value}/api/v1/images/${song.previewimage}`
-    song.url = `${userStore.baseUrl.value}/api/v1/audio/${song.url}`
-  })
-
   activesongs.value = songData
   
   if (response.data.artist)  artists.value = [response.data.artist]

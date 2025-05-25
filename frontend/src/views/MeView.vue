@@ -91,7 +91,7 @@ function reset() {
       <div>
         <p>{{ userStore.user.value.name }}</p>
         <p>{{ userStore.user.value.endpoint == "" ? 'Not Connected' : 'Connected' }}</p>
-        <p>Sharing: <button @click="share" class="border bordercolor rounded-lg p-0.5">{{ userStore.user.value.share
+        <p>Sharing: <button @click="userStore.user.value.share" class="border bordercolor rounded-lg p-0.5">{{ userStore.user.value.share
             }}</button></p>
         <button @click="getMe" class="border bordercolor rounded-lg p-0.5"> Refresh
         </button>

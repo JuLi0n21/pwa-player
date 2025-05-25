@@ -340,16 +340,29 @@ func getRecent(db *sql.DB, limit, offset int) ([]Song, error) {
 }
 
 func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
-	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap WHERE MD5Hash FROM Songs WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?", "%"+q+"%", "%"+q+"%", limit, offset)
+	rows, err := db.Query(
+		`
+	SELECT 
+		BeatmapId, 
+		MD5Hash, 
+		Title, 
+		Artist, 
+		Creator, 
+		Folder, 
+		File, 
+		Audio, 
+		TotalTime 
+	FROM Beatmap WHERE Title LIKE ? OR Artist LIKE ? LIMIT ? OFFSET ?
+	`, "%"+q+"%", "%"+q+"%", limit, offset)
 	if err != nil {
 		return ActiveSearch{}, err
 	}
 	defer rows.Close()
-	_, err = scanSongs(rows)
+	s, err := scanSongs(rows)
 	if err != nil {
 		return ActiveSearch{}, err
 	}
-	return ActiveSearch{}, nil
+	return ActiveSearch{Songs: s}, nil
 }
 
 func getArtists(db *sql.DB, q string, limit, offset int) ([]Artist, error) {
@@ -471,13 +484,16 @@ func getCollectionByName(db *sql.DB, limit, offset int, name string) (Collection
 func getCollections(db *sql.DB, q string, limit, offset int) ([]CollectionPreview, error) {
 	rows, err := db.Query(`
 		SELECT 
-		c.Name, COUNT(b.MD5Hash), b.Folder, b.File
+		c.Name, 
+		COUNT(b.MD5Hash) AS Count,
+		MIN(b.Folder) AS Folder,
+		MIN(b.File) AS File
 		FROM Collection c
-		Join Beatmap b ON c.MD5Hash = b.MD5Hash
+		JOIN Beatmap b ON c.MD5Hash = b.MD5Hash
 		WHERE c.Name LIKE ?
-		GROUP BY c.NAME
+		GROUP BY c.Name
 		LIMIT ?
-		OFFSET ?;`, "%"+q+"%", limit, offset)
+		OFFSET ?`, "%"+q+"%", limit, offset)
 	if err != nil {
 		return []CollectionPreview{}, err
 	}

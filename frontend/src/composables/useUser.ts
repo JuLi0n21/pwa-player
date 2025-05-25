@@ -6,7 +6,7 @@ let userInstance: ReturnType<typeof createUser> | null = null;
 function createUser() {
   const user = ref<Me | null>(null);
   const baseUrl = ref(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080');
-  const proxyUrl = ref(import.meta.env.VITE_PROXY_URL || 'http://localhost:8081');
+  const proxyUrl = ref(import.meta.env.VITE_PROXY_URL || 'https://proxy.illegalesachen.download');
 
   function saveUser(u: Me | null) {
     localStorage.setItem('activeUser', JSON.stringify(u));

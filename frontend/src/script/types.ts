@@ -1,4 +1,4 @@
-import type { Apiv1Song, v1CollectionPreview } from '@/generated';
+import type { Apiv1Song, v1CollectionPreview, v1Collection  } from '@/generated';
 
 export type Song = {
 	hash: string;
@@ -36,16 +36,36 @@ export type CollectionPreview = {
 	previewimage: string;
 };
 
+export type Collection = {
+  name: string;
+  items: number;
+  songs: Song[];
+}
+
+export function mapApiToCollection(coll : v1Collection): Collection {
+
+  return {
+    name: coll.name,
+    items: coll.items,
+    songs: mapApiToSongs(coll.songs)
+  }
+}
+
 
 export function mapToCollectionPreview(
   apiCollection: v1CollectionPreview,
   index: number
 ): CollectionPreview {
+    const image = apiCollection.image;
+    const imageIsMissing = !image || image === "404.png";
+
   return {
     index,
     name: apiCollection.name,
     length: apiCollection.items,
-    previewimage: `${basePath}/api/v1/image/${apiCollection.image}`,
+    previewimage: imageIsMissing
+      ? "/404.gif"
+      : `${basePath}/api/v1/image/${btoa(image).replace(/=+$/, '')}`,
   };
 }
 
