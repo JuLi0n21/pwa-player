@@ -54,7 +54,7 @@ jobs:
           go build -o osu-server ./grpc-backend/cmd/main.go
 
       - name: Upload osu-server binary artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: osu-server-binary
           path: osu-server
