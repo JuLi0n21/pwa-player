@@ -1,9 +1,11 @@
 package main
 
-import v1 "backend/gen"
+import (
+	v1 "backend/gen"
+	"backend/internal/db"
+	"fmt"
+)
 
-// Song represents a song entity
-// @Description Song represents a song with metadata
 type Song struct {
 	BeatmapID int    `json:"beatmap_id" example:"123456"`
 	MD5Hash   string `json:"md5_hash" example:"abcd1234efgh5678"`
@@ -29,6 +31,24 @@ func (song Song) toProto() *v1.Song {
 		Audio:     song.Audio,
 		TotalTime: song.TotalTime,
 		Image:     song.Image,
+	}
+}
+
+// The function `toSongProto` converts a `db.Beatmap` struct into a `v1.Song` struct by mapping the
+// fields and performing some data type conversions.
+func toSongProto(song db.Beatmap) *v1.Song {
+	fmt.Println(song)
+	return &v1.Song{
+		BeatmapId: int32(safeInt64(song.Beatmapid)),
+		Md5Hash:   safeString(song.Md5hash),
+		Title:     safeString(song.Title),
+		Artist:    safeString(song.Artist),
+		Creator:   safeString(song.Creator),
+		Folder:    safeString(song.Folder),
+		File:      safeString(song.File),
+		Audio:     safeString(song.Audio),
+		TotalTime: int64(safeInt64(song.Totaltime)),
+		Image:     extractImageFromFile(osuRoot, safeString(song.Folder), safeString(song.File)),
 	}
 }
 

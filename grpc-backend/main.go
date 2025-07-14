@@ -66,7 +66,7 @@ func main() {
 		log.Fatalf("Couldnt Update Endpoint url with Proxy: %v", err)
 	}
 
-	db, err := initDB("./data/music.db", osuDb, osuRoot)
+	db, sqlc, err := initDB("./data/music.db", osuDb, osuRoot)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,6 +76,7 @@ func main() {
 		Db:     db,
 		OsuDir: osuRoot,
 		Env:    envMap,
+		Sqlc:   sqlc,
 	}
 
 	if err := runGrpcAndGateway(s, port); err != nil {

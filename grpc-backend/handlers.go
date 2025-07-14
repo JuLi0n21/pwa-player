@@ -11,6 +11,7 @@ import (
 	"os"
 
 	v1 "backend/gen"
+	"backend/internal/db"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc/codes"
@@ -29,6 +30,7 @@ type Server struct {
 	Db     *sql.DB
 	OsuDb  *parser.OsuDB
 	Env    map[string]string
+	Sqlc   *db.Queries
 
 	v1.UnimplementedMusicBackendServer
 }
@@ -97,7 +99,7 @@ func (s *Server) Recent(ctx context.Context, req *v1.RecentRequest) (*v1.RecentR
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 
-	recent, err := getRecent(s.Db, limit, offset)
+	recent, err := getRecent(context.Background(), s.Sqlc, limit, offset)
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.Internal, "failed to get recents")

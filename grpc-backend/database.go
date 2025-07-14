@@ -1,6 +1,8 @@
 package main
 
 import (
+	sqlcdb "backend/internal/db"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,7 +11,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/juli0n21/go-osu-parser/parser"
 	_ "modernc.org/sqlite"
@@ -20,7 +21,7 @@ var ErrBeatmapCountNotMatch = errors.New("beatmap count not matching")
 var osuDB *parser.OsuDB
 var osuRoot string
 
-func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.DB, error) {
+func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.DB, *sqlcdb.Queries, error) {
 
 	osuDB = osuDb
 	osuRoot = osuroot
@@ -30,13 +31,13 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create directory %s: %v", dir, err)
+			return nil, nil, fmt.Errorf("failed to create directory %s: %v", dir, err)
 		}
 	}
 
 	db, err := sql.Open("sqlite", connectionString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open SQLite database %s: %v", connectionString, err)
+		return nil, nil, fmt.Errorf("failed to open SQLite database %s: %v", connectionString, err)
 	}
 
 	_, err = db.Exec("PRAGMA temp_store = MEMORY;")
@@ -45,31 +46,33 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.
 	}
 
 	if err = createDB(db); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = checkhealth(db, osuDB); err != nil {
 		if err = rebuildBeatmapDb(db, osuDB); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	if err = createCollectionDB(db); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	collectionDB, err := parser.ParseCollectionsDB(path.Join(osuRoot, "collection.db"))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = checkCollectionHealth(db, collectionDB); err != nil {
 		if err = rebuildCollectionDb(db, collectionDB); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return db, nil
+	sqlcQueries := sqlcdb.New(db)
+
+	return db, sqlcQueries, nil
 }
 
 func createDB(db *sql.DB) error {
@@ -329,14 +332,20 @@ func getBeatmapCount(db *sql.DB) int {
 	return count
 }
 
-func getRecent(db *sql.DB, limit, offset int) ([]Song, error) {
-	rows, err := db.Query("SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime FROM Beatmap GROUP BY Folder ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?", limit, offset)
+func getRecent(ctx context.Context, q *sqlcdb.Queries, limit, offset int) ([]Song, error) {
+	rows, err := q.GetRecentBeatmaps(ctx, sqlcdb.GetRecentBeatmapsParams{
+		Limit: int64(limit), Offset: int64(offset),
+	})
 	if err != nil {
-		return []Song{}, err
+		return nil, err
 	}
-	defer rows.Close()
 
-	return scanSongs(rows)
+	var songs []Song
+
+	for _, song := range rows {
+		songs = append(songs, convertToSong(song))
+	}
+	return songs, nil
 }
 
 func getSearch(db *sql.DB, q string, limit, offset int) (ActiveSearch, error) {
@@ -531,16 +540,18 @@ func scanSongs(rows *sql.Rows) ([]Song, error) {
 	for rows.Next() {
 		var s Song
 		if err := rows.Scan(&s.BeatmapID, &s.MD5Hash, &s.Title, &s.Artist, &s.Creator, &s.Folder, &s.File, &s.Audio, &s.TotalTime); err != nil {
-			return []Song{}, err
+			return nil, err
 		}
 
 		bm, err := parser.ParseOsuFile(fmt.Sprintf("%sSongs/%s/%s", osuRoot, s.Folder, s.File))
 		if err != nil {
 			fmt.Println(err)
-			s.Image = fmt.Sprintf("404.png")
+			s.Image = "404.png"
 		} else {
-			if len(bm.Events) > 1 && len(bm.Events[0].EventParams) > 1 {
-				s.Image = fmt.Sprintf("%s/%s", s.Folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
+			if bgImage := bm.BackgroundImage(); bgImage != "" {
+				s.Image = fmt.Sprintf("%s/%s", s.Folder, bgImage)
+			} else {
+				s.Image = "404.png"
 			}
 		}
 
@@ -568,12 +579,9 @@ func extractImageFromFile(osuRoot, folder, file string) string {
 		return "404.png"
 	}
 
-	if bm.Version > 3 {
-		if len(bm.Events) > 0 && len(bm.Events[0].EventParams) > 0 {
-			return fmt.Sprintf(`%s/%s`, folder, strings.Trim(bm.Events[0].EventParams[0], "\""))
-		}
-	} else {
-		fmt.Println(bm.Events)
+	bgImage := bm.BackgroundImage()
+	if bgImage != "" {
+		return filepath.Join(folder, bgImage)
 	}
 
 	return "404.png"
@@ -612,4 +620,33 @@ func scanCollectionPreview(row *sql.Row) (CollectionPreview, error) {
 		return CollectionPreview{}, err
 	}
 	return c, nil
+}
+
+func convertToSong(r sqlcdb.GetRecentBeatmapsRow) Song {
+	return Song{
+		BeatmapID: safeInt64(r.Beatmapid),
+		MD5Hash:   safeString(r.Md5hash),
+		Title:     safeString(r.Title),
+		Artist:    safeString(r.Artist),
+		Creator:   safeString(r.Creator),
+		Folder:    safeString(r.Folder),
+		File:      safeString(r.File),
+		Audio:     safeString(r.Audio),
+		TotalTime: int64(safeInt64(r.Totaltime)),
+		Image:     extractImageFromFile(osuRoot, safeString(r.Folder), safeString(r.File)),
+	}
+}
+
+func safeString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
+}
+
+func safeInt64(n sql.NullInt64) int {
+	if n.Valid {
+		return int(n.Int64)
+	}
+	return 0
 }
