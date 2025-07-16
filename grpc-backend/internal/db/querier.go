@@ -10,17 +10,18 @@ import (
 )
 
 type Querier interface {
-	GetArtists(ctx context.Context, arg GetArtistsParams) ([]GetArtistsRow, error)
 	GetBeatmapByHash(ctx context.Context, md5hash sql.NullString) (Beatmap, error)
 	GetBeatmapCount(ctx context.Context) (int64, error)
-	GetCollection(ctx context.Context, arg GetCollectionParams) ([]GetCollectionRow, error)
+	GetBeatmapSetCount(ctx context.Context) (int64, error)
 	GetCollectionByName(ctx context.Context, arg GetCollectionByNameParams) ([]GetCollectionByNameRow, error)
+	GetCollectionByOffset(ctx context.Context, arg GetCollectionByOffsetParams) ([]GetCollectionByOffsetRow, error)
 	GetCollectionCountByName(ctx context.Context, name sql.NullString) (int64, error)
-	GetCollections(ctx context.Context, arg GetCollectionsParams) ([]GetCollectionsRow, error)
-	GetRecentBeatmaps(ctx context.Context, arg GetRecentBeatmapsParams) ([]GetRecentBeatmapsRow, error)
+	GetRecentBeatmaps(ctx context.Context, arg GetRecentBeatmapsParams) ([]Beatmap, error)
 	InsertBeatmap(ctx context.Context, arg InsertBeatmapParams) error
 	InsertCollection(ctx context.Context, arg InsertCollectionParams) error
-	SearchBeatmaps(ctx context.Context, arg SearchBeatmapsParams) ([]SearchBeatmapsRow, error)
+	SearchArtists(ctx context.Context, arg SearchArtistsParams) ([]SearchArtistsRow, error)
+	SearchBeatmaps(ctx context.Context, arg SearchBeatmapsParams) ([]Beatmap, error)
+	SearchCollection(ctx context.Context, arg SearchCollectionParams) ([]SearchCollectionRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -12,6 +12,7 @@ import (
 
 	v1 "backend/gen"
 	"backend/internal/db"
+	sqlcdb "backend/internal/db"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc/codes"
@@ -83,36 +84,39 @@ func (s *Server) Song(ctx context.Context, req *v1.SongRequest) (*v1.SongRespons
 		return nil, status.Errorf(codes.InvalidArgument, "hash is required and cant be empty")
 	}
 
-	song, err := getSong(s.Db, hash)
+	song, err := s.Sqlc.GetBeatmapByHash(ctx, sql.NullString{Valid: true, String: hash})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.NotFound, "beatmap not found by hash")
 	}
 
 	return &v1.SongResponse{
-		Song: song.toProto(),
+		Song: toProtoSongSqlC(song),
 	}, nil
 }
 
 func (s *Server) Recent(ctx context.Context, req *v1.RecentRequest) (*v1.RecentResponse, error) {
-
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 
-	recent, err := getRecent(context.Background(), s.Sqlc, limit, offset)
+	rows, err := s.Sqlc.GetRecentBeatmaps(ctx, sqlcdb.GetRecentBeatmapsParams{
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.Internal, "failed to get recents")
 	}
 
 	return &v1.RecentResponse{
-		Songs: toProtoSongs(recent),
+		Songs: toProtoSongsSqlC(rows),
 	}, nil
 }
 
 func (s *Server) Favorite(ctx context.Context, req *v1.FavoriteRequest) (*v1.FavoriteResponse, error) {
+	return nil, fmt.Errorf("not implemented!")
 
-	limit := defaultLimit(int(req.Limit))
+	/*limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 	favorites, err := getFavorites(s.Db, req.Query, limit, offset)
 	if err != nil {
@@ -123,6 +127,7 @@ func (s *Server) Favorite(ctx context.Context, req *v1.FavoriteRequest) (*v1.Fav
 	return &v1.FavoriteResponse{
 		Songs: toProtoSongs(favorites),
 	}, nil
+	*/
 }
 
 func (s *Server) Collections(ctx context.Context, req *v1.CollectionRequest) (*v1.CollectionResponse, error) {
@@ -132,29 +137,32 @@ func (s *Server) Collections(ctx context.Context, req *v1.CollectionRequest) (*v
 
 	name := req.Name
 	if name != "" {
-		c, err := getCollectionByName(s.Db, limit, offset, name)
+		c, err := s.Sqlc.GetCollectionByName(ctx,
+			sqlcdb.GetCollectionByNameParams{
+				Name:   sql.NullString{Valid: true, String: name},
+				Limit:  int64(limit),
+				Offset: int64(offset),
+			},
+		)
 		if err != nil {
 			fmt.Println(err)
 			return nil, status.Errorf(codes.Internal, fmt.Sprintf("failed to fetch collection with name: %s", name))
 		}
-		return &v1.CollectionResponse{
-			Songs: toProtoSongs(c.Songs),
-			Items: int32(c.Items),
-			Name:  c.Name,
-		}, nil
+
+		return toProtoCollectionSqlc(c), nil
 	}
-	fmt.Println(limit, offset, req.Index)
-	c, err := getCollection(s.Db, limit, offset, int(req.Index))
+
+	c, err := s.Sqlc.GetCollectionByOffset(ctx, sqlcdb.GetCollectionByOffsetParams{
+		Offset:   int64(req.Index),
+		Limit:    int64(limit),
+		Offset_2: int64(offset),
+	})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("failed to fetch collection with index: %d", req.Index))
 	}
-	fmt.Println(c)
-	return &v1.CollectionResponse{
-		Songs: toProtoSongs(c.Songs),
-		Items: int32(c.Items),
-		Name:  c.Name,
-	}, nil
+
+	return toProtoCollectionoffsetSqlc(c), nil
 
 }
 
@@ -163,38 +171,45 @@ func (s *Server) Search(ctx context.Context, req *v1.SearchSharedRequest) (*v1.S
 	if q == "" {
 		return nil, status.Error(codes.InvalidArgument, "query cant be empty")
 	}
+	q = "%" + q + "%"
 
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 
-	search, err := getSearch(s.Db, q, limit, offset)
+	search, err := s.Sqlc.SearchBeatmaps(ctx, sqlcdb.SearchBeatmapsParams{
+		Title:  sql.NullString{String: q, Valid: true},
+		Artist: sql.NullString{String: q, Valid: true},
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Error(codes.Internal, "failed to fetch search")
 	}
 
 	return &v1.SearchSharedResponse{
-		Artist: search.Artist,
-		Songs:  toProtoSongs(search.Songs),
+		Artist: "",
+		Songs:  toProtoSongsSqlC(search),
 	}, nil
 }
 
 func (s *Server) SearchCollections(ctx context.Context, req *v1.SearchCollectionRequest) (*v1.SearchCollectionResponse, error) {
 	q := req.Query
-
-	limit := defaultLimit(int(req.Limit))
+	q = "%" + q + "%"
+	//limit := defaultLimit(int(req.Limit))
+	limit := 10000
 	offset := int(req.Offset)
 
-	fmt.Println(req)
-	preview, err := getCollections(s.Db, q, limit, offset)
+	preview, err := s.Sqlc.SearchCollection(ctx, sqlcdb.SearchCollectionParams{
+		Name:   sql.NullString{String: q, Valid: true},
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Errorf(codes.Internal, "failed to search for collections")
 	}
-
-	return &v1.SearchCollectionResponse{
-		Collections: toProtoCollectionPreview(preview),
-	}, nil
+	return toProtoCollectionsSearchPreview(preview), nil
 }
 
 func (s *Server) SearchArtists(ctx context.Context, req *v1.SearchArtistRequest) (*v1.SearchArtistResponse, error) {
@@ -206,13 +221,17 @@ func (s *Server) SearchArtists(ctx context.Context, req *v1.SearchArtistRequest)
 	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 
-	a, err := getArtists(s.Db, q, limit, offset)
+	_, err := s.Sqlc.SearchArtists(ctx, sqlcdb.SearchArtistsParams{
+		Artist: sql.NullString{Valid: true, String: q},
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		fmt.Println(err)
 		return nil, status.Error(codes.Internal, "failed to search artists")
 	}
 	return &v1.SearchArtistResponse{
-		Artists: toProtoArtist(a),
+		Artists: nil,
 	}, nil
 }
 

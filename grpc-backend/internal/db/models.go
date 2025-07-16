@@ -20,13 +20,13 @@ type Beatmap struct {
 	Md5hash          sql.NullString `json:"md5hash"`
 	File             sql.NullString `json:"file"`
 	Rankedstatus     sql.NullString `json:"rankedstatus"`
-	Lastmodifiedtime sql.NullTime   `json:"lastmodifiedtime"`
+	Lastmodifiedtime sql.NullInt64  `json:"lastmodifiedtime"`
 	Totaltime        sql.NullInt64  `json:"totaltime"`
 	Audiopreviewtime sql.NullInt64  `json:"audiopreviewtime"`
 	Beatmapsetid     sql.NullInt64  `json:"beatmapsetid"`
 	Source           sql.NullString `json:"source"`
 	Tags             sql.NullString `json:"tags"`
-	Lastplayed       sql.NullTime   `json:"lastplayed"`
+	Lastplayed       sql.NullInt64  `json:"lastplayed"`
 	Folder           sql.NullString `json:"folder"`
 }
 

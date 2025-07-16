@@ -10,54 +10,6 @@ import (
 	"database/sql"
 )
 
-const getArtists = `-- name: GetArtists :many
-SELECT Artist, COUNT(Artist) AS count
-FROM Beatmap 
-WHERE Artist LIKE ? OR Title LIKE ?
-GROUP BY Artist 
-LIMIT ? OFFSET ?
-`
-
-type GetArtistsParams struct {
-	Artist sql.NullString `json:"artist"`
-	Title  sql.NullString `json:"title"`
-	Limit  int64          `json:"limit"`
-	Offset int64          `json:"offset"`
-}
-
-type GetArtistsRow struct {
-	Artist sql.NullString `json:"artist"`
-	Count  int64          `json:"count"`
-}
-
-func (q *Queries) GetArtists(ctx context.Context, arg GetArtistsParams) ([]GetArtistsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getArtists,
-		arg.Artist,
-		arg.Title,
-		arg.Limit,
-		arg.Offset,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetArtistsRow{}
-	for rows.Next() {
-		var i GetArtistsRow
-		if err := rows.Scan(&i.Artist, &i.Count); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getBeatmapByHash = `-- name: GetBeatmapByHash :one
 SELECT beatmapid, artist, artistunicode, title, titleunicode, creator, difficulty, audio, md5hash, file, rankedstatus, lastmodifiedtime, totaltime, audiopreviewtime, beatmapsetid, source, tags, lastplayed, folder FROM Beatmap WHERE MD5Hash = ?
 `
@@ -100,8 +52,19 @@ func (q *Queries) GetBeatmapCount(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const getBeatmapSetCount = `-- name: GetBeatmapSetCount :one
+SELECT COUNT(*) FROM Beatmap GROUP BY BeatmapSetId
+`
+
+func (q *Queries) GetBeatmapSetCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getBeatmapSetCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getRecentBeatmaps = `-- name: GetRecentBeatmaps :many
-SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime
+SELECT beatmapid, artist, artistunicode, title, titleunicode, creator, difficulty, audio, md5hash, file, rankedstatus, lastmodifiedtime, totaltime, audiopreviewtime, beatmapsetid, source, tags, lastplayed, folder
 FROM Beatmap GROUP BY Folder ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?
 `
 
@@ -110,37 +73,35 @@ type GetRecentBeatmapsParams struct {
 	Offset int64 `json:"offset"`
 }
 
-type GetRecentBeatmapsRow struct {
-	Beatmapid sql.NullInt64  `json:"beatmapid"`
-	Md5hash   sql.NullString `json:"md5hash"`
-	Title     sql.NullString `json:"title"`
-	Artist    sql.NullString `json:"artist"`
-	Creator   sql.NullString `json:"creator"`
-	Folder    sql.NullString `json:"folder"`
-	File      sql.NullString `json:"file"`
-	Audio     sql.NullString `json:"audio"`
-	Totaltime sql.NullInt64  `json:"totaltime"`
-}
-
-func (q *Queries) GetRecentBeatmaps(ctx context.Context, arg GetRecentBeatmapsParams) ([]GetRecentBeatmapsRow, error) {
+func (q *Queries) GetRecentBeatmaps(ctx context.Context, arg GetRecentBeatmapsParams) ([]Beatmap, error) {
 	rows, err := q.db.QueryContext(ctx, getRecentBeatmaps, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetRecentBeatmapsRow{}
+	items := []Beatmap{}
 	for rows.Next() {
-		var i GetRecentBeatmapsRow
+		var i Beatmap
 		if err := rows.Scan(
 			&i.Beatmapid,
-			&i.Md5hash,
-			&i.Title,
 			&i.Artist,
+			&i.Artistunicode,
+			&i.Title,
+			&i.Titleunicode,
 			&i.Creator,
-			&i.Folder,
-			&i.File,
+			&i.Difficulty,
 			&i.Audio,
+			&i.Md5hash,
+			&i.File,
+			&i.Rankedstatus,
+			&i.Lastmodifiedtime,
 			&i.Totaltime,
+			&i.Audiopreviewtime,
+			&i.Beatmapsetid,
+			&i.Source,
+			&i.Tags,
+			&i.Lastplayed,
+			&i.Folder,
 		); err != nil {
 			return nil, err
 		}
@@ -176,13 +137,13 @@ type InsertBeatmapParams struct {
 	Md5hash          sql.NullString `json:"md5hash"`
 	File             sql.NullString `json:"file"`
 	Rankedstatus     sql.NullString `json:"rankedstatus"`
-	Lastmodifiedtime sql.NullTime   `json:"lastmodifiedtime"`
+	Lastmodifiedtime sql.NullInt64  `json:"lastmodifiedtime"`
 	Totaltime        sql.NullInt64  `json:"totaltime"`
 	Audiopreviewtime sql.NullInt64  `json:"audiopreviewtime"`
 	Beatmapsetid     sql.NullInt64  `json:"beatmapsetid"`
 	Source           sql.NullString `json:"source"`
 	Tags             sql.NullString `json:"tags"`
-	Lastplayed       sql.NullTime   `json:"lastplayed"`
+	Lastplayed       sql.NullInt64  `json:"lastplayed"`
 	Folder           sql.NullString `json:"folder"`
 }
 
@@ -211,8 +172,56 @@ func (q *Queries) InsertBeatmap(ctx context.Context, arg InsertBeatmapParams) er
 	return err
 }
 
+const searchArtists = `-- name: SearchArtists :many
+SELECT Artist, COUNT(Artist) AS count
+FROM Beatmap 
+WHERE Artist LIKE ? OR Title LIKE ?
+GROUP BY Artist 
+LIMIT ? OFFSET ?
+`
+
+type SearchArtistsParams struct {
+	Artist sql.NullString `json:"artist"`
+	Title  sql.NullString `json:"title"`
+	Limit  int64          `json:"limit"`
+	Offset int64          `json:"offset"`
+}
+
+type SearchArtistsRow struct {
+	Artist sql.NullString `json:"artist"`
+	Count  int64          `json:"count"`
+}
+
+func (q *Queries) SearchArtists(ctx context.Context, arg SearchArtistsParams) ([]SearchArtistsRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchArtists,
+		arg.Artist,
+		arg.Title,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchArtistsRow{}
+	for rows.Next() {
+		var i SearchArtistsRow
+		if err := rows.Scan(&i.Artist, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchBeatmaps = `-- name: SearchBeatmaps :many
-SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime 
+SELECT beatmapid, artist, artistunicode, title, titleunicode, creator, difficulty, audio, md5hash, file, rankedstatus, lastmodifiedtime, totaltime, audiopreviewtime, beatmapsetid, source, tags, lastplayed, folder 
 FROM Beatmap 
 WHERE Title LIKE ? OR Artist LIKE ? 
 LIMIT ? OFFSET ?
@@ -225,19 +234,7 @@ type SearchBeatmapsParams struct {
 	Offset int64          `json:"offset"`
 }
 
-type SearchBeatmapsRow struct {
-	Beatmapid sql.NullInt64  `json:"beatmapid"`
-	Md5hash   sql.NullString `json:"md5hash"`
-	Title     sql.NullString `json:"title"`
-	Artist    sql.NullString `json:"artist"`
-	Creator   sql.NullString `json:"creator"`
-	Folder    sql.NullString `json:"folder"`
-	File      sql.NullString `json:"file"`
-	Audio     sql.NullString `json:"audio"`
-	Totaltime sql.NullInt64  `json:"totaltime"`
-}
-
-func (q *Queries) SearchBeatmaps(ctx context.Context, arg SearchBeatmapsParams) ([]SearchBeatmapsRow, error) {
+func (q *Queries) SearchBeatmaps(ctx context.Context, arg SearchBeatmapsParams) ([]Beatmap, error) {
 	rows, err := q.db.QueryContext(ctx, searchBeatmaps,
 		arg.Title,
 		arg.Artist,
@@ -248,19 +245,29 @@ func (q *Queries) SearchBeatmaps(ctx context.Context, arg SearchBeatmapsParams) 
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchBeatmapsRow{}
+	items := []Beatmap{}
 	for rows.Next() {
-		var i SearchBeatmapsRow
+		var i Beatmap
 		if err := rows.Scan(
 			&i.Beatmapid,
-			&i.Md5hash,
-			&i.Title,
 			&i.Artist,
+			&i.Artistunicode,
+			&i.Title,
+			&i.Titleunicode,
 			&i.Creator,
-			&i.Folder,
-			&i.File,
+			&i.Difficulty,
 			&i.Audio,
+			&i.Md5hash,
+			&i.File,
+			&i.Rankedstatus,
+			&i.Lastmodifiedtime,
 			&i.Totaltime,
+			&i.Audiopreviewtime,
+			&i.Beatmapsetid,
+			&i.Source,
+			&i.Tags,
+			&i.Lastplayed,
+			&i.Folder,
 		); err != nil {
 			return nil, err
 		}

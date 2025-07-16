@@ -12,17 +12,20 @@ SELECT * FROM Beatmap WHERE MD5Hash = ?;
 -- name: GetBeatmapCount :one
 SELECT COUNT(*) FROM Beatmap;
 
+-- name: GetBeatmapSetCount :one
+SELECT COUNT(*) FROM Beatmap GROUP BY BeatmapSetId;
+
 -- name: GetRecentBeatmaps :many
-SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime
+SELECT *
 FROM Beatmap GROUP BY Folder ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?;
 
 -- name: SearchBeatmaps :many
-SELECT BeatmapId, MD5Hash, Title, Artist, Creator, Folder, File, Audio, TotalTime 
+SELECT * 
 FROM Beatmap 
 WHERE Title LIKE ? OR Artist LIKE ? 
 LIMIT ? OFFSET ?;
 
--- name: GetArtists :many
+-- name: SearchArtists :many
 SELECT Artist, COUNT(Artist) AS count
 FROM Beatmap 
 WHERE Artist LIKE ? OR Title LIKE ?

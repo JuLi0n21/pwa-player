@@ -10,82 +10,6 @@ import (
 	"database/sql"
 )
 
-const getCollection = `-- name: GetCollection :many
-SELECT 
-  c.Name, 
-  b.BeatmapId, 
-  b.MD5Hash, 
-  b.Title, 
-  b.Artist, 
-  b.Creator, 
-  b.Folder, 
-  b.File, 
-  b.Audio, 
-  b.TotalTime
-FROM Collection c
-JOIN Beatmap b ON c.MD5Hash = b.MD5Hash
-JOIN (
-  SELECT DISTINCT Name
-  FROM Collection
-  ORDER BY Name
-  LIMIT 1 OFFSET ?
-) selected_name ON c.Name = selected_name.Name
-LIMIT ? OFFSET ?
-`
-
-type GetCollectionParams struct {
-	Offset   int64 `json:"offset"`
-	Limit    int64 `json:"limit"`
-	Offset_2 int64 `json:"offset_2"`
-}
-
-type GetCollectionRow struct {
-	Name      sql.NullString `json:"name"`
-	Beatmapid sql.NullInt64  `json:"beatmapid"`
-	Md5hash   sql.NullString `json:"md5hash"`
-	Title     sql.NullString `json:"title"`
-	Artist    sql.NullString `json:"artist"`
-	Creator   sql.NullString `json:"creator"`
-	Folder    sql.NullString `json:"folder"`
-	File      sql.NullString `json:"file"`
-	Audio     sql.NullString `json:"audio"`
-	Totaltime sql.NullInt64  `json:"totaltime"`
-}
-
-func (q *Queries) GetCollection(ctx context.Context, arg GetCollectionParams) ([]GetCollectionRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCollection, arg.Offset, arg.Limit, arg.Offset_2)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetCollectionRow{}
-	for rows.Next() {
-		var i GetCollectionRow
-		if err := rows.Scan(
-			&i.Name,
-			&i.Beatmapid,
-			&i.Md5hash,
-			&i.Title,
-			&i.Artist,
-			&i.Creator,
-			&i.Folder,
-			&i.File,
-			&i.Audio,
-			&i.Totaltime,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getCollectionByName = `-- name: GetCollectionByName :many
 SELECT c.Name, b.BeatmapId, b.MD5Hash, b.Title, b.Artist, b.Creator, b.Folder, b.File, b.Audio, b.TotalTime
 FROM Collection c
@@ -147,6 +71,83 @@ func (q *Queries) GetCollectionByName(ctx context.Context, arg GetCollectionByNa
 	return items, nil
 }
 
+const getCollectionByOffset = `-- name: GetCollectionByOffset :many
+SELECT 
+  c.Name, 
+  b.BeatmapId, 
+  b.MD5Hash, 
+  b.Title, 
+  b.Artist, 
+  b.Creator, 
+  b.Folder, 
+  b.File, 
+  b.Audio, 
+  b.TotalTime
+FROM Collection c
+JOIN Beatmap b ON c.MD5Hash = b.MD5Hash
+WHERE c.Name = (
+  SELECT Name
+  FROM Collection
+  GROUP BY Name
+  ORDER BY Name
+  LIMIT 1 OFFSET ?1
+)
+LIMIT ?2 OFFSET ?3
+`
+
+type GetCollectionByOffsetParams struct {
+	Offset   int64 `json:"offset"`
+	Limit    int64 `json:"limit"`
+	Offset_2 int64 `json:"offset_2"`
+}
+
+type GetCollectionByOffsetRow struct {
+	Name      sql.NullString `json:"name"`
+	Beatmapid sql.NullInt64  `json:"beatmapid"`
+	Md5hash   sql.NullString `json:"md5hash"`
+	Title     sql.NullString `json:"title"`
+	Artist    sql.NullString `json:"artist"`
+	Creator   sql.NullString `json:"creator"`
+	Folder    sql.NullString `json:"folder"`
+	File      sql.NullString `json:"file"`
+	Audio     sql.NullString `json:"audio"`
+	Totaltime sql.NullInt64  `json:"totaltime"`
+}
+
+func (q *Queries) GetCollectionByOffset(ctx context.Context, arg GetCollectionByOffsetParams) ([]GetCollectionByOffsetRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCollectionByOffset, arg.Offset, arg.Limit, arg.Offset_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCollectionByOffsetRow{}
+	for rows.Next() {
+		var i GetCollectionByOffsetRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Beatmapid,
+			&i.Md5hash,
+			&i.Title,
+			&i.Artist,
+			&i.Creator,
+			&i.Folder,
+			&i.File,
+			&i.Audio,
+			&i.Totaltime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCollectionCountByName = `-- name: GetCollectionCountByName :one
 SELECT COUNT(*) FROM Collection WHERE Name = ?
 `
@@ -158,37 +159,55 @@ func (q *Queries) GetCollectionCountByName(ctx context.Context, name sql.NullStr
 	return count, err
 }
 
-const getCollections = `-- name: GetCollections :many
-SELECT c.Name, COUNT(b.MD5Hash) AS Count, MIN(b.Folder) AS Folder, MIN(b.File) AS File
-FROM Collection c
+const insertCollection = `-- name: InsertCollection :exec
+INSERT INTO Collection (Name, MD5Hash) VALUES (?, ?)
+`
+
+type InsertCollectionParams struct {
+	Name    sql.NullString `json:"name"`
+	Md5hash sql.NullString `json:"md5hash"`
+}
+
+func (q *Queries) InsertCollection(ctx context.Context, arg InsertCollectionParams) error {
+	_, err := q.db.ExecContext(ctx, insertCollection, arg.Name, arg.Md5hash)
+	return err
+}
+
+const searchCollection = `-- name: SearchCollection :many
+SELECT 
+  c.Name, 
+  COUNT(b.MD5Hash) AS Count, 
+  b.Folder, 
+  b.File
+  FROM Collection c
 JOIN Beatmap b ON c.MD5Hash = b.MD5Hash
 WHERE c.Name LIKE ?
 GROUP BY c.Name
 LIMIT ? OFFSET ?
 `
 
-type GetCollectionsParams struct {
+type SearchCollectionParams struct {
 	Name   sql.NullString `json:"name"`
 	Limit  int64          `json:"limit"`
 	Offset int64          `json:"offset"`
 }
 
-type GetCollectionsRow struct {
+type SearchCollectionRow struct {
 	Name   sql.NullString `json:"name"`
 	Count  int64          `json:"count"`
-	Folder interface{}    `json:"folder"`
-	File   interface{}    `json:"file"`
+	Folder sql.NullString `json:"folder"`
+	File   sql.NullString `json:"file"`
 }
 
-func (q *Queries) GetCollections(ctx context.Context, arg GetCollectionsParams) ([]GetCollectionsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCollections, arg.Name, arg.Limit, arg.Offset)
+func (q *Queries) SearchCollection(ctx context.Context, arg SearchCollectionParams) ([]SearchCollectionRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchCollection, arg.Name, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetCollectionsRow{}
+	items := []SearchCollectionRow{}
 	for rows.Next() {
-		var i GetCollectionsRow
+		var i SearchCollectionRow
 		if err := rows.Scan(
 			&i.Name,
 			&i.Count,
@@ -206,18 +225,4 @@ func (q *Queries) GetCollections(ctx context.Context, arg GetCollectionsParams) 
 		return nil, err
 	}
 	return items, nil
-}
-
-const insertCollection = `-- name: InsertCollection :exec
-INSERT INTO Collection (Name, MD5Hash) VALUES (?, ?)
-`
-
-type InsertCollectionParams struct {
-	Name    sql.NullString `json:"name"`
-	Md5hash sql.NullString `json:"md5hash"`
-}
-
-func (q *Queries) InsertCollection(ctx context.Context, arg InsertCollectionParams) error {
-	_, err := q.db.ExecContext(ctx, insertCollection, arg.Name, arg.Md5hash)
-	return err
 }

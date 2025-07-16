@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS Beatmap (
     MD5Hash TEXT DEFAULT '00000000000000000000000000000000',
     File TEXT DEFAULT 'unknown.osu',
     RankedStatus TEXT DEFAULT 'Unknown',
-    LastModifiedTime DATETIME DEFAULT '0001-01-01 00:00:00',
+    LastModifiedTime INTEGER DEFAULT 0,
     TotalTime INTEGER DEFAULT 0,
     AudioPreviewTime INTEGER DEFAULT 0,
     BeatmapSetId INTEGER DEFAULT -1,
     Source TEXT DEFAULT '',
     Tags TEXT DEFAULT '',
-    LastPlayed DATETIME DEFAULT '0001-01-01 00:00:00',
+    LastPlayed INTEGER DEFAULT 0,
     Folder TEXT DEFAULT 'Unknown Folder',
     UNIQUE (Artist, Title, MD5Hash, Difficulty)
 );
