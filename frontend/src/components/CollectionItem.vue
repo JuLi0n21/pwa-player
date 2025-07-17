@@ -90,7 +90,7 @@ onBeforeUnmount(() => {
       </div>
     </header>
     <div
-      class="flex-1 flex-col  overflow-y-scroll coll-container"
+      class="flex-1 flex-col  overflow-y-scroll coll-container justify-start"
     >
       <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
     </div>

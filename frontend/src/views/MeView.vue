@@ -83,7 +83,7 @@ function reset() {
   </header>
 
   <main class="flex-1 flex flex-col h-full overflow-y-scroll">
-    <input @change="update" type="text" id="url-input" :value="userStore.baseUrl.value" disabled />
+    <input @change="update" type="text" id="url-input" :value="userStore.user.value?.endpoint" disabled />
     <br>
     <button v-if="!userStore.user.value" @click="getMe" class="border bordercolor rounded-lg p-0.5">{{ loginStatus }}</button>
     <div v-if="userStore.user.value" class="flex p-5 justify-between">
