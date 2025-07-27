@@ -41,7 +41,6 @@ func (s *Server) registerRoutes() *http.ServeMux {
 
 	mux.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
 	mux.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
-
 	mux.HandleFunc("/api/v1/callback", s.callback)
 
 	return mux
