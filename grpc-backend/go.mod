@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1
 	github.com/joho/godotenv v1.5.1
-	github.com/juli0n21/go-osu-parser v0.0.11
+	github.com/juli0n21/go-osu-parser v0.0.12
 	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6
