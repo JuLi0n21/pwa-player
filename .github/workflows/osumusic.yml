@@ -3,19 +3,40 @@ name: Docker Build and Push
 on:
   push:
     branches: [main]
-    paths:
-      - 'proxy/**'
-      - 'frontend/**'
-      - 'grpc-backend/**'
   pull_request:
-    paths:
-      - 'proxy/**'
-      - 'frontend/**'
-      - 'grpc-backend/**'
   workflow_dispatch:
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      proxy: ${{ steps.set.outputs.proxy }}
+      frontend: ${{ steps.set.outputs.frontend }}
+      backend: ${{ steps.set.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Detect file changes
+        id: set
+        run: |
+          git fetch origin main
+          FILES=$(git diff --name-only origin/main...HEAD || true)
+          echo "$FILES"
+
+          echo "proxy=false" >> $GITHUB_OUTPUT
+          echo "frontend=false" >> $GITHUB_OUTPUT
+          echo "backend=false" >> $GITHUB_OUTPUT
+
+          echo "$FILES" | grep -q '^proxy/' && echo "proxy=true" >> $GITHUB_OUTPUT
+          echo "$FILES" | grep -q '^frontend/' && echo "frontend=true" >> $GITHUB_OUTPUT
+          echo "$FILES" | grep -q '^grpc-backend/' && echo "backend=true" >> $GITHUB_OUTPUT
+
   build-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -24,14 +45,16 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install protoc and plugins
+      - name: Install Protobuf
         run: |
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip
           unzip protoc-21.12-linux-x86_64.zip -d protoc3
           sudo mv protoc3/bin/* /usr/local/bin/
           sudo mv protoc3/include/* /usr/local/include/
-          rm -rf protoc-21.12-linux-x86_64.zip protoc3
+          rm -rf protoc*
 
+      - name: Install protoc-gen plugins
+        run: |
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
           go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
@@ -53,17 +76,25 @@ jobs:
         working-directory: grpc-backend
         run: go build -o osu-server .
 
-      - name: Upload osu-server binary
+      - name: Upload osu-server binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: osu-server
           path: grpc-backend/osu-server
 
   build-proxy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.proxy == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Download osu-server binary
+        uses: actions/download-artifact@v4
+        with:
+          name: osu-server
+          path: grpc-backend
 
       - name: Build Proxy Docker image
         run: |
@@ -81,10 +112,18 @@ jobs:
           docker push juli0n21/proxy-container:latest
 
   build-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Download osu-server binary
+        uses: actions/download-artifact@v4
+        with:
+          name: osu-server
+          path: grpc-backend
 
       - name: Build Frontend Docker image
         run: |
