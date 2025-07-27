@@ -2,8 +2,7 @@ name: Docker Build and Push
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'proxy/**'
       - 'frontend/**'
@@ -17,29 +16,12 @@ on:
 
 jobs:
   build-backend:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      contains(github.event.head_commit.message, 'grpc-backend') ||
-      github.event_name == 'pull_request' && (
-        contains(github.event.pull_request.changed_files, 'grpc-backend')
-      ) ||
-      github.event_name == 'push' && (
-        contains(github.event.head_commit.message, 'grpc-backend')
-      )
     runs-on: ubuntu-latest
-    outputs:
-      osu-server-path: grpc-backend/osu-server
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Install protoc
+      - name: Install protoc and plugins
         run: |
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip
           unzip protoc-21.12-linux-x86_64.zip -d protoc3
@@ -47,8 +29,6 @@ jobs:
           sudo mv protoc3/include/* /usr/local/include/
           rm -rf protoc-21.12-linux-x86_64.zip protoc3
 
-      - name: Install protoc-gen plugins
-        run: |
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
           go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
@@ -68,28 +48,19 @@ jobs:
 
       - name: Build osu-server binary
         working-directory: grpc-backend
-        run: |
-          go build -o osu-server .
+        run: go build -o osu-server .
 
-      - name: Upload osu-server binary artifact
+      - name: Upload osu-server binary
         uses: actions/upload-artifact@v4
         with:
           name: osu-server
           path: grpc-backend/osu-server
 
   build-proxy:
-    needs: build-backend
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'proxy') || github.event.pull_request.changed_files && contains(join(github.event.pull_request.changed_files, ' '), 'proxy/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Download osu-server artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: osu-server
-          path: grpc-backend
 
       - name: Build Proxy Docker image
         run: |
@@ -99,8 +70,7 @@ jobs:
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-        run: |
-          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+        run: echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
       - name: Push Proxy Docker image
         run: |
@@ -108,18 +78,10 @@ jobs:
           docker push juli0n21/proxy-container:latest
 
   build-frontend:
-    needs: build-backend
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'frontend') || github.event.pull_request.changed_files && contains(join(github.event.pull_request.changed_files, ' '), 'frontend/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Download osu-server artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: osu-server
-          path: grpc-backend
 
       - name: Build Frontend Docker image
         run: |
@@ -129,8 +91,7 @@ jobs:
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-        run: |
-          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+        run: echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
       - name: Push Frontend Docker image
         run: |
