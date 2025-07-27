@@ -7,15 +7,28 @@ on:
     paths:
       - 'proxy/**'
       - 'frontend/**'
+      - 'grpc-backend/**'
   pull_request:
     paths:
       - 'proxy/**'
       - 'frontend/**'
+      - 'grpc-backend/**'
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build-backend:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message, 'grpc-backend') ||
+      github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.changed_files, 'grpc-backend')
+      ) ||
+      github.event_name == 'push' && (
+        contains(github.event.head_commit.message, 'grpc-backend')
+      )
     runs-on: ubuntu-latest
+    outputs:
+      osu-server-path: grpc-backend/osu-server
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -61,12 +74,52 @@ jobs:
       - name: Upload osu-server binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: osu-server-binary
-          path: osu-server
+          name: osu-server
+          path: grpc-backend/osu-server
+
+  build-proxy:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'proxy') || github.event.pull_request.changed_files && contains(join(github.event.pull_request.changed_files, ' '), 'proxy/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download osu-server artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: osu-server
+          path: grpc-backend
 
       - name: Build Proxy Docker image
         run: |
           docker build -t juli0n21/proxy-container:latest -t juli0n21/proxy-container:${{ github.sha }} ./proxy
+
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+
+      - name: Push Proxy Docker image
+        run: |
+          docker push juli0n21/proxy-container:${{ github.sha }}
+          docker push juli0n21/proxy-container:latest
+
+  build-frontend:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'frontend') || github.event.pull_request.changed_files && contains(join(github.event.pull_request.changed_files, ' '), 'frontend/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download osu-server artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: osu-server
+          path: grpc-backend
 
       - name: Build Frontend Docker image
         run: |
@@ -79,9 +132,7 @@ jobs:
         run: |
           echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-      - name: Push Docker image
+      - name: Push Frontend Docker image
         run: |
-          docker push juli0n21/proxy-container:${{ github.sha }}
-          docker push juli0n21/proxy-container:latest
           docker push juli0n21/frontend-container:${{ github.sha }}
           docker push juli0n21/frontend-container:latest
