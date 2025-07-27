@@ -200,7 +200,7 @@ func rebuildBeatmapDb(db *sql.DB, osuDb *parser.OsuDB) error {
 
 	stmt = tx.Stmt(stmt)
 
-	for i, beatmap := range osuDb.Beatmaps {
+	for _, beatmap := range osuDb.Beatmaps {
 		//fmt.Println(i, beatmap.Artist, beatmap.SongTitle, beatmap.MD5Hash)
 		_, err := stmt.Exec(
 			beatmap.DifficultyID, beatmap.Artist, beatmap.ArtistUnicode,
@@ -211,7 +211,7 @@ func rebuildBeatmapDb(db *sql.DB, osuDb *parser.OsuDB) error {
 			beatmap.SongSource, beatmap.SongTags, beatmap.LastPlayed, beatmap.FolderName,
 		)
 		if err != nil {
-			fmt.Println(i, "hash: ", beatmap.MD5Hash, "artist:", beatmap.Artist, "title:", beatmap.SongTitle, err)
+			//fmt.Println(i, "hash: ", beatmap.MD5Hash, "artist:", beatmap.Artist, "title:", beatmap.SongTitle, err)
 		}
 	}
 

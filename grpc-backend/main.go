@@ -33,8 +33,9 @@ func main() {
 	}
 
 	if envMap["OSU_PATH"] == "" {
-		fmt.Println("Osu Path not found! Please paste the full path to your osu! folder.")
-		fmt.Println("Osu Path not found pls paste the full Path to ur osu! folder \n it should start with 'C://' and can be opened from the Settings menu!)\n path: ")
+		fmt.Println("Osu! not found! Please paste the full path to your osu! folder.")
+		fmt.Println("It should start with 'C://' and can be opened from the Options menu (Open osu! folder)")
+		fmt.Print("Path: ")
 
 		fmt.Scanln(&osuRoot)
 		osuRoot = strings.TrimSpace(osuRoot)
@@ -43,18 +44,26 @@ func main() {
 		godotenv.Write(envMap, ".env")
 	}
 
-	osuRoot := envMap["OSU_PATH"]
 	cookie := envMap["COOKIE"]
+
+	if cookie == "" {
+		fmt.Println("No Authentication found please follow the link to log in!\nhttps://proxy.illegalesachen.download/login")
+		fmt.Println("After login paste the cookie from the browser")
+		fmt.Print("Cookie: ")
+		fmt.Scanln(&cookie)
+		cookie = strings.TrimSpace(cookie)
+
+		envMap["COOKIE"] = cookie
+		godotenv.Write(envMap, ".env")
+	}
+
+	osuRoot := envMap["OSU_PATH"]
 	port := GetEnv(envMap["PORT"], ":8080")
 	filename := path.Join(osuRoot, "osu!.db")
 
 	osuDb, err := parser.ParseOsuDB(filename)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	if cookie == "" {
-		fmt.Println("No Authentication found please follow the link to log in!\n http://proxy.illegalesachen.download/login")
 	}
 
 	url, err := StartCloudflared(port)
@@ -79,6 +88,7 @@ func main() {
 		Sqlc:   sqlc,
 	}
 
+	fmt.Println("Enjoy ur music at: https://music.illegalesachen.download (click refresh if the link hasnt updated yet)")
 	if err := runGrpcAndGateway(s, port); err != nil {
 		log.Fatalf("Failed to run servers: %v", err)
 	}
@@ -93,6 +103,7 @@ func GetEnv(key, fallback string) string {
 }
 
 func StartCloudflared(port string) (string, error) {
+	fmt.Println("Starting Cloudflared tunnel...")
 	cmd := exec.Command("cloudflared", "tunnel", "--url", fmt.Sprintf("http://localhost%s", port))
 
 	stderr, err := cmd.StderrPipe()
@@ -206,7 +217,7 @@ func runGrpcAndGateway(s *Server, port string) error {
 	}
 
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("HTTP %s %s", r.Method, r.URL.Path)
+		//log.Printf("HTTP %s %s", r.Method, r.URL.Path)
 		gwMux.ServeHTTP(w, r)
 	}))
 
