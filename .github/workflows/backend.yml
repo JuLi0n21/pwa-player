@@ -1,0 +1,58 @@
+name: Build Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'grpc-backend/**'
+  pull_request:
+    paths:
+      - 'grpc-backend/**'
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Protobuf
+        run: |
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip
+          unzip protoc-21.12-linux-x86_64.zip -d protoc3
+          sudo mv protoc3/bin/* /usr/local/bin/
+          sudo mv protoc3/include/* /usr/local/include/
+          rm -rf protoc*
+
+      - name: Install protoc-gen plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+          go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Generate protobuf code
+        run: |
+          protoc \
+            -I grpc-backend/proto \
+            -I grpc-backend/googleapis \
+            --go_out=grpc-backend/gen --go_opt=paths=source_relative \
+            --go-grpc_out=grpc-backend/gen --go-grpc_opt=paths=source_relative \
+            --grpc-gateway_out=grpc-backend/gen --grpc-gateway_opt=paths=source_relative \
+            --openapiv2_out=grpc-backend/gen/swagger \
+            grpc-backend/proto/osu_music.proto
+
+      - name: Build osu-server binary
+        working-directory: grpc-backend
+        run: go build -o osu-server .
+
+      - name: Upload osu-server binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: osu-server
+          path: grpc-backend/osu-server

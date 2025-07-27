@@ -1,0 +1,39 @@
+name: Build Proxy Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'proxy/**'
+  pull_request:
+    paths:
+      - 'proxy/**'
+  workflow_dispatch:
+
+jobs:
+  build-proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download osu-server binary
+        uses: actions/download-artifact@v4
+        with:
+          name: osu-server
+          path: grpc-backend
+
+      - name: Build Proxy Docker image
+        run: |
+          docker build -t juli0n21/proxy-container:latest -t juli0n21/proxy-container:${{ github.sha }} ./proxy
+
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+
+      - name: Push Proxy Docker image
+        run: |
+          docker push juli0n21/proxy-container:${{ github.sha }}
+          docker push juli0n21/proxy-container:latest
