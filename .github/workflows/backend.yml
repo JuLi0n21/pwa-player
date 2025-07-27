@@ -13,6 +13,11 @@ on:
 jobs:
   build-backend:
     runs-on: ubuntu-latest
+    strategy:
+        matrix:
+            goos: [linux, windows, darwin]
+            goarch: [amd64, arm64]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,12 +52,17 @@ jobs:
             --openapiv2_out=grpc-backend/gen/swagger \
             grpc-backend/proto/osu_music.proto
 
-      - name: Build osu-server binary
+      - name: Build osu-server binary for ${{ matrix.goos }}/ ${{ matrix.goarch }}
         working-directory: grpc-backend
-        run: go build -o osu-server .
+        run: |
+          output=osu-music-server-${{ matrix.goos }}-${{ matrix.goarch }}
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            output=${output}.exe
+          fi
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o $output .
 
       - name: Upload osu-server binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: osu-server
-          path: grpc-backend/osu-server
+          name: osu-server-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: grpc-backend/osu-music-server-${{ matrix.goos }}-${{ matrix.goarch }}*
