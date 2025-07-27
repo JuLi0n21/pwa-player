@@ -97,7 +97,7 @@ func createDB(db *sql.DB) error {
     Tags TEXT DEFAULT '',
     LastPlayed INTEGER DEFAULT 0,
     Folder TEXT DEFAULT 'Unknown Folder',
-    UNIQUE (Artist, Title, MD5Hash, Difficulty)
+    UNIQUE (Artist, Title, MD5Hash, Difficulty, Folder)
 	);
 	`)
 	if err != nil {

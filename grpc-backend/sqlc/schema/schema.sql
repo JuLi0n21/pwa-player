@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS Beatmap (
     Tags TEXT DEFAULT '',
     LastPlayed INTEGER DEFAULT 0,
     Folder TEXT DEFAULT 'Unknown Folder',
-    UNIQUE (Artist, Title, MD5Hash, Difficulty)
+    UNIQUE (Artist, Title, MD5Hash, Difficulty, Folder)
 );
 
 CREATE INDEX IF NOT EXISTS idx_beatmap_md5hash ON Beatmap(MD5Hash);
