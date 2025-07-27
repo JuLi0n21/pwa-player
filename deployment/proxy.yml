@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: proxy-container
-        image: juli0n21/proxy-container:3cfc7692691ebe0046b1d3834e1ff0caa49e2ccf
+        image: juli0n21/proxy-container:9cd067f250ca05ce6a5ded59ba9eefd89f7b4f07
         ports:
         - containerPort: 80
         volumeMounts:
