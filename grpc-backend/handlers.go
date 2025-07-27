@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	v1 "backend/gen"
 	"backend/internal/db"
@@ -248,7 +249,7 @@ func (s *Server) songFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := os.Open(s.OsuDir + "Songs/" + string(filename))
+	file, err := os.Open(filepath.Join(s.OsuDir, "Songs", string(filename)))
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, ErrFileNotFound.Error(), http.StatusNotFound)
@@ -280,7 +281,7 @@ func (s *Server) imageFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.ServeFile(w, r, s.OsuDir+"Songs/"+string(filename))
+	http.ServeFile(w, r, filepath.Join(s.OsuDir, "Songs", string(filename)))
 }
 
 func (s *Server) callback(w http.ResponseWriter, r *http.Request) {

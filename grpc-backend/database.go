@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/juli0n21/go-osu-parser/parser"
@@ -60,7 +59,7 @@ func initDB(connectionString string, osuDb *parser.OsuDB, osuroot string) (*sql.
 		return nil, nil, err
 	}
 
-	collectionDB, err := parser.ParseCollectionsDB(path.Join(osuRoot, "collection.db"))
+	collectionDB, err := parser.ParseCollectionsDB(filepath.Join(osuRoot, "collection.db"))
 	if err != nil {
 		return nil, nil, err
 	}
