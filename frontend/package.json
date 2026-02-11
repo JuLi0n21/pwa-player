@@ -12,13 +12,13 @@
     "generate": "openapi-generator-cli generate -i api-specs/osu_music.swagger.json -g typescript-axios -o ./src/generated"
   },
   "dependencies": {
-    "axios": "^1.9.0",
+    "axios": "^1.13.5",
     "pinia": "^2.2.6",
     "vue": "^3.5.13",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
-    "@openapitools/openapi-generator-cli": "^2.20.2",
+    "@openapitools/openapi-generator-cli": "^2.28.3",
     "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.9.3",
     "@vitejs/plugin-vue": "^5.2.1",
