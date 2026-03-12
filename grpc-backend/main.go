@@ -207,6 +207,10 @@ func runGrpcAndGateway(s *Server, port string) error {
 	mux.HandleFunc("/callback/", s.callback)
 	mux.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
 	mux.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
+	mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("pong"))
+	})
 
 	fileServer := http.FileServer(http.Dir("gen/swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fileServer))

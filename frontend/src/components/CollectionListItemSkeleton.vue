@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center bg-white/5 border rounded-lg h-24 animate-pulse bordercolor">
-    <div class="bg-white/10 m-2 rounded-lg w-20 h-20 shrink-0"></div>
+    <div class="bg-white/10 p-1 rounded-lg w-24 h-24 shrink-0"></div>
     <div class="flex flex-col flex-1 justify-center gap-2 p-2 overflow-hidden">
       <div class="bg-white/10 rounded w-3/4 h-5"></div>
       <div class="bg-white/5 rounded w-1/4 h-3"></div>

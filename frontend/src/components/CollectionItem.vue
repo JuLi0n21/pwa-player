@@ -85,12 +85,20 @@ onBeforeUnmount(() => {
         <hr />
       </div>
     </header>
-    <div class="flex-col flex-1 justify-start overflow-y-scroll coll-container">
+    <div class="gap-2 grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 p-2 overflow-y-auto collection-container song-item-wrapper coll-container">
       <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
-    </div>
 
     <template v-if="loading">
       <SongItemSkeleton v-for="i in 10" :key="'skeleton-' + i" />
     </template>
+    </div>
   </main>
 </template>
+
+<style scoped>
+.song-item-wrapper {
+  content-visibility: auto;
+  
+  contain-intrinsic-size: 96px;
+}
+</style>

@@ -9,8 +9,9 @@ const { musicApi } = useApi();
 const api = musicApi.value;
 
 const containerRef = ref<HTMLElement | null>(null);
+const parentRef = ref<HTMLElement | null>(null);
 const collections = ref<CollectionPreview[]>([]);
-const limit = ref(12);
+const limit = ref(12 * 4);
 const offset = ref(0);
 const isLoading = ref(false);
 
@@ -23,16 +24,22 @@ const fetchCollections = async () => {
     const newItems = response.data.collections || [];
 
     if (newItems.length > 0) {
-      let mapped = mapApiToCollectionPreview(newItems, offset.value);
+      const mapped = mapApiToCollectionPreview(newItems, offset.value);
       collections.value = [...collections.value, ...mapped];
       offset.value += limit.value;
 
       await nextTick();
 
       const container = containerRef.value;
-      if (container && container.scrollHeight <= container.clientHeight) {
-        isLoading.value = false; 
-        await fetchCollections(); 
+      if (container) {
+        const noScrollbarYet = container.scrollHeight <= container.clientHeight + 0;
+        
+        const mightBeMoreData = newItems.length === limit.value;
+
+        if (noScrollbarYet && mightBeMoreData) {
+          isLoading.value = false; 
+          return await fetchCollections(); 
+        }
       }
     }
   } catch (error) {
@@ -58,10 +65,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="flex flex-col flex-1 h-full overflow-y-hidden text-center">
+  <main class="flex flex-col w-full h-full overflow-hidden">
+    
     <div 
       ref="containerRef" 
-      class="gap-2 grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 p-2 overflow-y-auto collection-container"
+      class="flex-1 content-start gap-2 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 p-2 overflow-y-auto"
+      style="min-height: 0;" 
     >
       <CollectionListItem 
         v-for="(collection, index) in collections" 
@@ -75,3 +84,16 @@ onMounted(async () => {
     </div>
   </main>
 </template>
+
+<style scoped>
+.collection-grid {
+  /* Force the grid to at least fill the available height */
+  min-height: 100%;
+}
+
+/* Ensure the wrapper doesn't cause items to shrink */
+.song-item-wrapper {
+  content-visibility: auto;
+  contain-intrinsic-size: 96px;
+}
+</style>

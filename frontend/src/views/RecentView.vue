@@ -64,7 +64,7 @@ onMounted(async () => {
 <template>
   <div 
     ref="containerRef" 
-    class="flex-1 gap-2 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 p-1 overflow-y-scroll song-container"
+    class="flex-1 content-start gap-2 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 p-1 overflow-y-scroll coll-container"
   >
     <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
 
@@ -73,3 +73,10 @@ onMounted(async () => {
     </template>
   </div>
 </template>
+
+<style scoped>
+.song-item-wrapper {
+  content-visibility: auto;
+  contain-intrinsic-size: 96px;
+}
+</style>
