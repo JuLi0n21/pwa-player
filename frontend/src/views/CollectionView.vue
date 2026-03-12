@@ -33,12 +33,12 @@ const fetchCollections = async () => {
       const container = containerRef.value;
       if (container) {
         const noScrollbarYet = container.scrollHeight <= container.clientHeight + 0;
-        
+
         const mightBeMoreData = newItems.length === limit.value;
 
         if (noScrollbarYet && mightBeMoreData) {
-          isLoading.value = false; 
-          return await fetchCollections(); 
+          isLoading.value = false;
+          return await fetchCollections();
         }
       }
     }
@@ -66,17 +66,12 @@ onMounted(async () => {
 
 <template>
   <main class="flex flex-col w-full h-full overflow-hidden">
-    
-    <div 
-      ref="containerRef" 
+    <div
+      ref="containerRef"
       class="flex-1 content-start gap-2 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 p-2 overflow-y-auto"
-      style="min-height: 0;" 
+      style="min-height: 0"
     >
-      <CollectionListItem 
-        v-for="(collection, index) in collections" 
-        :key="index" 
-        :collection="collection" 
-      />
+      <CollectionListItem v-for="(collection, index) in collections" :key="index" :collection="collection" />
 
       <template v-if="isLoading">
         <CollectionListItemSkeleton v-for="i in 12" :key="'skeleton-' + i" />

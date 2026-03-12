@@ -62,8 +62,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div 
-    ref="containerRef" 
+  <div
+    ref="containerRef"
     class="flex-1 content-start gap-2 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 p-1 overflow-y-scroll coll-container"
   >
     <SongItem v-for="(song, index) in songs" :key="index" :song="song" />

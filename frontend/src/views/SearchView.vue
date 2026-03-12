@@ -29,15 +29,15 @@ const showSearch = ref(false);
 
 async function fetchActiveSearch(term: string) {
   if (!term.trim()) return emptySearch();
-  
+
   isLoading.value = true;
   try {
     const response = await api.musicBackendSearch(term);
     const songData = mapApiToSongs(response.data.songs ?? []);
-    
+
     activesongs.value = songData;
     artists.value = response.data.artist ? [response.data.artist] : [];
-    
+
     audioStore.setCollection(songData);
     showSearch.value = true;
     router.replace({ query: { ...route.query, s: term } });
@@ -52,7 +52,7 @@ async function fetchActiveSearch(term: string) {
 async function fetchSearchArtist(artist: string) {
   isLoading.value = true;
   showSearch.value = false; // Hide recommendations overlay when a choice is made
-  
+
   try {
     const response = await api.musicBackendArtist(artist);
     const data = mapApiToSongs(response.data.songs || []);
@@ -60,9 +60,9 @@ async function fetchSearchArtist(artist: string) {
     songs.value = data.map((song: Song) => ({
       ...song,
       previewimage: `${userStore.cloudflareUrl.value}/api/v1/images/${song.previewimage}`,
-      url: `${userStore.cloudflareUrl.value}/api/v1/audio/${song.url}`
+      url: `${userStore.cloudflareUrl.value}/api/v1/audio/${song.url}`,
     }));
-    
+
     router.replace({ query: { ...route.query, a: artist } });
   } finally {
     isLoading.value = false;
@@ -88,9 +88,12 @@ watch(searchInput, (val) => {
   }
 });
 
-watch(() => route.query.a, (newArtist) => {
-  if (newArtist) fetchSearchArtist(newArtist as string);
-});
+watch(
+  () => route.query.a,
+  (newArtist) => {
+    if (newArtist) fetchSearchArtist(newArtist as string);
+  },
+);
 
 onMounted(() => {
   if (route.query.a) fetchSearchArtist(route.query.a as string);
@@ -118,9 +121,9 @@ onMounted(() => {
         placeholder="Type to Search..."
         class="flex-1 bg-white/5 p-4 border rounded-xl outline-none ring-yellow-500/50 focus:ring-2 w-full h-14 transition-all bordercolor"
       />
-      <div 
+      <div
         v-if="searchInput"
-        class="top-1/2 right-6 absolute opacity-50 hover:opacity-100 -translate-y-1/2 cursor-pointer" 
+        class="top-1/2 right-6 absolute opacity-50 hover:opacity-100 -translate-y-1/2 cursor-pointer"
         @click="emptySearch"
       >
         <i class="text-xl far fa-times-circle"></i>
@@ -128,35 +131,24 @@ onMounted(() => {
     </div>
 
     <div class="relative flex-1 overflow-y-auto">
-      
-      <div 
-        v-if="showSearch && (activesongs.length || artists.length || isLoading)" 
+      <div
+        v-if="showSearch && (activesongs.length || artists.length || isLoading)"
         class="z-20 absolute backdrop-blur-xl w-full min-h-full"
       >
         <ActiveSearchSkeleton v-if="isLoading" />
 
-        <ActiveSearchList 
-          v-else 
-          :songs="activesongs" 
-          :artist="artists" 
-          :search="searchInput" 
-        />
+        <ActiveSearchList v-else :songs="activesongs" :artist="artists" :search="searchInput" />
       </div>
 
-        <template v-else>
-          <SongItem 
-            v-for="(song, index) in songs" 
-            :key="song.hash || index" 
-            :song="song"
-            class="song-render-node"
-          />
-        </template>
-        
-        <div v-if="!isLoading && songs.length === 0 && !showSearch" class="col-span-full opacity-30 py-20 text-center">
-          <i class="mb-4 text-6xl fa-solid fa-music"></i>
-          <p>Find your favorite music</p>
-        </div>
+      <template v-else>
+        <SongItem v-for="(song, index) in songs" :key="song.hash || index" :song="song" class="song-render-node" />
+      </template>
+
+      <div v-if="!isLoading && songs.length === 0 && !showSearch" class="col-span-full opacity-30 py-20 text-center">
+        <i class="mb-4 text-6xl fa-solid fa-music"></i>
+        <p>Find your favorite music</p>
       </div>
+    </div>
   </main>
 </template>
 

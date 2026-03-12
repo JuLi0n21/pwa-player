@@ -107,36 +107,40 @@ function reset() {
   </header>
 
   <main class="flex flex-col flex-1 h-full overflow-y-scroll">
-    <div class="flex flex-col gap-2 p-4">      
+    <div class="flex flex-col gap-2 p-4">
       <div class="flex gap-1 overflow-hidden">
-        <input 
-          @change="update" 
-          type="text" 
-          id="url-input" 
-          :value="userStore.cloudflareUrl.value" 
+        <input
+          @change="update"
+          type="text"
+          id="url-input"
+          :value="userStore.cloudflareUrl.value"
           class="flex-1 bg-white/5 p-2 border-y border-l rounded-l-lg outline-none bordercolor"
           placeholder="https://..."
         />
         <button @click="copyToClipboard" class="bg-white/5 hover:bg-white/10 p-2 border bordercolor" title="Copy URL">
           <i class="fa-solid fa-copy"></i>
         </button>
-        <button @click="pasteFromClipboard" class="bg-white/5 hover:bg-white/10 p-2 border rounded-r-lg text-yellow-500 bordercolor" title="Paste URL">
+        <button
+          @click="pasteFromClipboard"
+          class="bg-white/5 hover:bg-white/10 p-2 border rounded-r-lg text-yellow-500 bordercolor"
+          title="Paste URL"
+        >
           <i class="fa-solid fa-paste"></i>
         </button>
-        <div 
+        <div
           v-if="isHealthy !== null"
           class="self-center rounded-full w-2 h-2"
           :class="isHealthy ? 'bg-green-500 shadow-[0_0_8px_green]' : 'bg-red-500 shadow-[0_0_8px_red]'"
-        >
-      </div>
+        ></div>
       </div>
     </div>
 
     <br />
-    
+
     <button v-if="!userStore.user.value" @click="getMe" class="mx-4 p-0.5 border rounded-lg bordercolor">
       {{ loginStatus }}
     </button>
+    <button v-else @click="getMe" class="mx-4 p-0.5 border rounded-lg bordercolor">Refresh</button>
 
     <div class="flex flex-col justify-around p-10 w-full">
       <div class="flex flex-1 justify-between">
