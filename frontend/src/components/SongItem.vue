@@ -32,8 +32,8 @@ function updateSong() {
       </h5>
       <h5 :style="{ color: action }" class="text-sm action">
         <slot name="length"
-          >{{ Math.floor(props.song.length / 60000 || 0) }}:{{
-            Math.floor((props.song.length ?? 0 / 1000) % 60)
+          >{{ Math.floor(props.song?.length / 60000 || 0) }}:{{
+            Math.floor((props.song?.length ?? 0 / 1000) % 60)
               .toString()
               .padStart(2, "0")
           }}</slot

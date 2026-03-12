@@ -127,7 +127,7 @@ function createAudio() {
 
   async function loadInitialSong() {
     try {
-      const api = musicApi();
+      const api = musicApi.value;
       const res = await api.musicBackendRecent();
       let songs = mapApiToSongs(res.data.songs);
       if (res.data?.songs?.length) {

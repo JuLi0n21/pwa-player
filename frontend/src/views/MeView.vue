@@ -44,7 +44,7 @@ async function getMe() {
   }
 
   userStore.setUser(data);
-  userStore.cloudflareUrl.value(data.endpoint);
+  userStore.cloudflareUrl.value = data.endpoint;
 }
 
 onMounted(() => {
