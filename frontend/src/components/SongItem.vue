@@ -21,7 +21,12 @@ function updateSong() {
   <div @click="updateSong" :style="{ borderColor: border }" class="flex m-1 border rounded-lg md:text-xl bordercolor">
     <img
       class="m-1 rounded-lg w-14 md:w-24 h-14 md:h-24"
-:src="props.song?.previewimage ? encodeURI(`${userStore.cloudflareUrl.value}${props.song.previewimage}?h=56&w=56`) : '/default-bg.png'"      loading="lazy"
+      :src="
+        props.song?.previewimage
+          ? encodeURI(`${userStore.cloudflareUrl.value}${props.song.previewimage}?h=56&w=56`)
+          : '/default-bg.png'
+      "
+      loading="lazy"
     />
     <div class="flex flex-col overflow-hidden text-left">
       <p :style="{ color: info }" class="overflow-hidden text-base text-ellipsis text-nowrap info">

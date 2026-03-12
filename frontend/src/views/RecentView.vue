@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import SongItem from "../components/SongItem.vue";
+import SongItemSkeleton from "../components/SongItemSkeleton.vue";
 
-import { type Song, type CollectionPreview, mapApiToSongs } from "../script/types";
+import { type Song, mapApiToSongs } from "../script/types";
 import { ref, onMounted, nextTick } from "vue";
 import { useAudio } from "@/composables/useAudio";
 import { useUser } from "@/composables/useUser";
@@ -61,7 +62,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div ref="containerRef" class="flex-col flex-1 overflow-y-scroll song-container">
+  <div 
+    ref="containerRef" 
+    class="flex-1 gap-2 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 p-1 overflow-y-scroll song-container"
+  >
     <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
+
+    <template v-if="isLoading">
+      <SongItemSkeleton v-for="i in 5" :key="'skel-' + i" />
+    </template>
   </div>
 </template>

@@ -7,12 +7,15 @@ const props = defineProps<{ collection: CollectionPreview }>();
 </script>
 
 <template>
-  <RouterLink :to="'/collection/' + props.collection.index">
-    <div class="flex border rounded-lg bordercolor">
-      <img class="m-2 rounded-lg w-20 h-20" :src="encodeURI(`${userStore.cloudflareUrl.value}${props.collection.previewimage}`)" loading="lazy" />
-      <div class="flex flex-col">
-        <h3 class="self-start info">{{ props.collection.name }}</h3>
-        <h5 class="self-start text-sm info">{{ props.collection.length }} Songs</h5>
+  <RouterLink :to="'/collection/' + props.collection.index" class="w-full">
+    <div class="flex items-center border rounded-lg h-24 overflow-hidden bordercolor">     <img
+        class="m-2 rounded-lg w-20 h-20"
+        :src="encodeURI(`${userStore.cloudflareUrl.value}${props.collection.previewimage}`)"
+        loading="lazy"
+      />
+   <div class="flex flex-col overflow-hidden text-left">
+        <h3 class="overflow-hidden text-ellipsis whitespace-nowrap info">{{ props.collection.name }}</h3>
+        <h5 class="text-sm info">{{ props.collection.length }} Songs</h5>
       </div>
     </div>
   </RouterLink>

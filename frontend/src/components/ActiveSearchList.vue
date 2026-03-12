@@ -40,7 +40,14 @@ function highlightText(text: string, searchterm: string) {
       <ul>
         <li v-for="(song, index) in props.songs" :key="index" class="rounded-lg">
           <button @click="update(song.hash)" class="flex">
-            <img :src="encodeURI(`${userStore.cloudflareUrl.value}/${song.previewimage ? song.previewimage + '?h=120&w=120' : '/default-bg.png'}`)" class="w-12 h-12" />
+            <img
+              :src="
+                encodeURI(
+                  `${userStore.cloudflareUrl.value}/${song.previewimage ? song.previewimage + '?h=120&w=120' : '/default-bg.png'}`,
+                )
+              "
+              class="w-12 h-12"
+            />
             <p class="ml-2 overflow-hidden text-ellipsis text-nowrap">
               <span v-html="highlightText(song.name, search)"></span> -
               <span v-html="highlightText(song.artist, props.search)"></span>

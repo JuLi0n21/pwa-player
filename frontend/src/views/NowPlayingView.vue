@@ -9,10 +9,9 @@ const title = computed(() => audioStore.currentSong.value?.name || "Unknown Titl
 const artist = computed(() => audioStore.currentSong.value?.artist || "Unknown Artist");
 const bgimg = computed(() => {
   const preview = audioStore.currentSong.value?.previewimage;
-  return preview 
-    ? encodeURI(`${userStore.cloudflareUrl.value}${preview}`) 
-    : "/default-bg.jpg";
-});</script>
+  return preview ? encodeURI(`${userStore.cloudflareUrl.value}${preview}`) : "/default-bg.jpg";
+});
+</script>
 
 <template>
   <header>

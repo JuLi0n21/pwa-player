@@ -51,7 +51,7 @@ export function mapToCollectionPreview(apiCollection: V1CollectionPreview, index
     index: index,
     name: apiCollection.name,
     length: apiCollection.items,
-    previewimage: image ?  `/api/v1/image/${btoa(image).replace(/=+$/, "")}` : "",
+    previewimage: image ? `/api/v1/image/${btoa(image).replace(/=+$/, "")}` : "",
   };
 }
 

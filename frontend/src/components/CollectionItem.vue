@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SongItem from "../components/SongItem.vue";
+import SongItemSkeleton from "./SongItemSkeleton.vue";
 import { type Song, mapApiToCollection } from "../script/types";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
@@ -87,5 +88,9 @@ onBeforeUnmount(() => {
     <div class="flex-col flex-1 justify-start overflow-y-scroll coll-container">
       <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
     </div>
+
+    <template v-if="loading">
+      <SongItemSkeleton v-for="i in 10" :key="'skeleton-' + i" />
+    </template>
   </main>
 </template>
