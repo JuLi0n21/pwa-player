@@ -302,7 +302,7 @@ func extractImageFromFile(osuRoot, folder, file string) string {
 	bm, err := parser.ParseOsuFile(filepath.Join(osuRoot, "Songs", folder, file))
 	if err != nil {
 		fmt.Println(err)
-		return "404.png"
+		return ""
 	}
 
 	bgImage := bm.BackgroundImage()
@@ -310,5 +310,5 @@ func extractImageFromFile(osuRoot, folder, file string) string {
 		return filepath.Join(folder, bgImage)
 	}
 
-	return "404.png"
+	return ""
 }

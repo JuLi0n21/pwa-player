@@ -1,4 +1,4 @@
-import type { Apiv1Song, v1CollectionPreview, v1Collection } from "@/generated";
+import type { Apiv1Song, V1CollectionPreview, V1CollectionResponse } from "@/generated";
 
 export type Song = {
   hash: string;
@@ -9,20 +9,16 @@ export type Song = {
   previewimage: string;
   mapper: string;
 };
-
-const basePath = import.meta.env.BACKEND_URL || "http://localhost:8080";
-
 export function mapToSong(apiSong: Apiv1Song): Song {
   const image = apiSong.image;
-  const imageIsMissing = !image || image === "404.png";
 
   return {
     hash: apiSong.md5Hash,
     name: apiSong.title,
     artist: apiSong.artist,
     length: Number(apiSong.totalTime),
-    url: `${basePath}/api/v1/audio/${btoa(apiSong.folder + "/" + apiSong.audio).replace(/=+$/, "")}`,
-    previewimage: imageIsMissing ? "/404.gif" : `${basePath}/api/v1/image/${btoa(image).replace(/=+$/, "")}`,
+    url: `/api/v1/audio/${btoa(apiSong.folder + "/" + apiSong.audio).replace(/=+$/, "")}`,
+    previewimage: image ? `/api/v1/image/${btoa(image).replace(/=+$/, "")}` : "",
     mapper: apiSong.creator,
   };
 }
@@ -40,7 +36,7 @@ export type Collection = {
   songs: Song[];
 };
 
-export function mapApiToCollection(coll: v1Collection): Collection {
+export function mapApiToCollection(coll: V1CollectionResponse): Collection {
   return {
     name: coll.name,
     items: coll.items,
@@ -48,15 +44,14 @@ export function mapApiToCollection(coll: v1Collection): Collection {
   };
 }
 
-export function mapToCollectionPreview(apiCollection: v1CollectionPreview, index: number): CollectionPreview {
+export function mapToCollectionPreview(apiCollection: V1CollectionPreview, index: number): CollectionPreview {
   const image = apiCollection.image;
-  const imageIsMissing = !image || image === "404.png";
 
   return {
     index: index,
     name: apiCollection.name,
     length: apiCollection.items,
-    previewimage: imageIsMissing ? "/404.gif" : `${basePath}/api/v1/image/${btoa(image).replace(/=+$/, "")}`,
+    previewimage: image ?  `/api/v1/image/${btoa(image).replace(/=+$/, "")}` : "",
   };
 }
 
@@ -72,6 +67,6 @@ export function mapApiToSongs(apiSongs: Apiv1Song[]): Song[] {
   return apiSongs.map(mapToSong);
 }
 
-export function mapApiToCollectionPreview(apiCollections: v1CollectionPreview[], offset: number): CollectionPreview[] {
+export function mapApiToCollectionPreview(apiCollections: V1CollectionPreview[], offset: number): CollectionPreview[] {
   return apiCollections.map((c, i) => mapToCollectionPreview(c, i + offset));
 }

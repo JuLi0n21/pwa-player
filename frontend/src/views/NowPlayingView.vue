@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useAudio } from "@/composables/useAudio";
+import { useUser } from "@/composables/useUser";
 
 const audioStore = useAudio();
-
+const userStore = useUser();
 const title = computed(() => audioStore.currentSong.value?.name || "Unknown Title");
 const artist = computed(() => audioStore.currentSong.value?.artist || "Unknown Artist");
-const bgimg = computed(() => audioStore.currentSong.value?.previewimage || "/default-bg.jpg");
-</script>
+const bgimg = computed(() => {
+  const preview = audioStore.currentSong.value?.previewimage;
+  return preview 
+    ? encodeURI(`${userStore.cloudflareUrl.value}${preview}`) 
+    : "/default-bg.jpg";
+});</script>
 
 <template>
   <header>
@@ -29,7 +34,7 @@ const bgimg = computed(() => audioStore.currentSong.value?.previewimage || "/def
       <div class="relative w-full aspect-square">
         <img
           class="absolute inset-0 shadow-lg rounded-lg w-full h-full object-cover"
-          :src="encodeURI(bgimg + '?h=320&w=320')"
+          :src="encodeURI(`${bgimg}?h=320&w=320`)"
           :key="bgimg"
           alt="Album Art"
         />

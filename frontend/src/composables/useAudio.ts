@@ -1,11 +1,13 @@
 import { ref, onMounted } from "vue";
 import { mapApiToSongs, type Song } from "@/script/types";
 import { useApi } from "./useApi";
+import { useUser } from "./useUser";
 
 let audioInstance: ReturnType<typeof createAudio> | null = null;
 
 function createAudio() {
   const { musicApi } = useApi();
+  const userStore = useUser();
 
   const audioElement = document.createElement("audio");
   audioElement.setAttribute("id", "global-audio");
@@ -46,7 +48,7 @@ function createAudio() {
     map.set(song.hash, song);
 
     audioElement.pause();
-    audioElement.src = song.url;
+    audioElement.src = userStore.cloudflareUrl.value + "/" + song.url;
     audioElement.addEventListener("canplaythrough", () => audioElement.play().catch(console.error), { once: true });
   }
 

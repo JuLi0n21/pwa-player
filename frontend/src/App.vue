@@ -50,7 +50,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen text-xl wrapper info">
+  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen overflow-y-auto text-xl wrapper info">
     <RouterView />
     <NowPlaying v-show="showNowPlaying" />
     <Footer />
@@ -58,7 +58,7 @@ onUnmounted(() => {
 
   <div v-else class="flex flex-col h-screen max-h-screen text-xl wrapper info">
     <main class="flex flex-1 w-full h-full overflow-y-hidden">
-      <aside class="bg-primary p-4 w-1/12 overflow-y-scroll">
+      <aside class="bg-primary p-4 w-1/12 overflow-y-auto">
         <HistoryView />
       </aside>
 
@@ -66,7 +66,7 @@ onUnmounted(() => {
         <RouterView />
       </section>
 
-      <section class="flex flex-col w-1/5 overflow-y-scroll">
+      <section class="flex flex-col w-1/5 overflow-y-auto">
         <NowPlayingView />
       </section>
     </main>

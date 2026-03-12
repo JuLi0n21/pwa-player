@@ -3,7 +3,6 @@ import SongItem from "../components/SongItem.vue";
 
 import { type Song, type CollectionPreview, mapApiToSongs } from "../script/types";
 import { ref, onMounted, nextTick } from "vue";
-import { useRoute } from "vue-router";
 import { useAudio } from "@/composables/useAudio";
 import { useUser } from "@/composables/useUser";
 import { useApi } from "@/composables/useApi";
