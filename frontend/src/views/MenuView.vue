@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute } from "vue-router";
 
 const route = useRoute();
 
 function isActive(path: string) {
-  return route.path === path ? 'bg-blue-500 text-white' : '';
-};
-
+  return route.path === path ? "bg-blue-500 text-white" : "";
+}
 </script>
 
 <template>
@@ -14,16 +13,20 @@ function isActive(path: string) {
     <header v-show="true">
       <div class="wrapper">
         <nav class="flex justify-start my-2 mx-1 space-x-1 overflow-y-auto overflow-x-auto flex-nowrap text-nowrap">
-          <RouterLink class="p-1 rounded-full backdrop--light shadow-xl" to="/"><i class="fa-solid fa-arrow-left"></i>
+          <RouterLink class="p-1 rounded-full backdrop--light shadow-xl" to="/"
+            ><i class="fa-solid fa-arrow-left"></i>
           </RouterLink>
-          <RouterLink :class="`p-1 rounded-full backdrop--light shadow-xl ${isActive('/')}`" to="/menu/recent">Recently
-            added</RouterLink>
+          <RouterLink :class="`p-1 rounded-full backdrop--light shadow-xl ${isActive('/')}`" to="/menu/recent"
+            >Recently added</RouterLink
+          >
           <RouterLink :class="`p-1 rounded-full backdrop--light shadow-xl ${isActive('/')}`" to="/menu/favourites">
-            Favorites</RouterLink>
+            Favorites</RouterLink
+          >
           <RouterLink :class="`p-1 rounded-full backdrop--light shadow-xl ${isActive('/')}`" to="/menu/collections">
-            Collections</RouterLink>
+            Collections</RouterLink
+          >
         </nav>
-        <hr>
+        <hr />
       </div>
     </header>
 

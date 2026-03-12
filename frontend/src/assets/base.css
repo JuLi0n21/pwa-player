@@ -1,34 +1,34 @@
 body {
-    background-color: var(--background-color);
-    margin:0;
-    padding: 0;
+  background-color: var(--background-color);
+  margin: 0;
+  padding: 0;
 }
 
-* .{
-min-height: 0px;
+* . {
+  min-height: 0px;
 }
 
 .backdrop--light {
-    background-color: rgba(70, 57, 63, 1);
+  background-color: rgba(70, 57, 63, 1);
 }
 
 .backdrop--medium {
-    background-color: rgba(56, 46, 50, 1);
+  background-color: rgba(56, 46, 50, 1);
 }
 
 .backdrop--medium--light {
-    background-color: rgba(42, 34, 38, 1);
+  background-color: rgba(42, 34, 38, 1);
 }
 
 .backdrop--medium--dark {
-    background-color: rgba(56, 46, 50, 1)
+  background-color: rgba(56, 46, 50, 1);
 }
 .backdrop--dark {
-    background-color: rgba(28, 23, 25, 1) 
+  background-color: rgba(28, 23, 25, 1);
 }
 
 .router-link-active {
-    color: var(--action-color);
+  color: var(--action-color);
 }
 
 :root {
@@ -43,25 +43,25 @@ min-height: 0px;
 }
 
 .bg {
-  background-color: var(--background-color)
+  background-color: var(--background-color);
 }
 
 .action {
-  color: var(--action-color)
+  color: var(--action-color);
 }
 
 .info {
-  color: var(--information-color)
+  color: var(--information-color);
 }
 
 .info:hover {
-  color: var(--information-color)
+  color: var(--information-color);
 }
 
 searcheven {
-    background-color: lighten(var(--background-color),10%);
+  background-color: lighten(var(--background-color), 10%);
 }
 
 searchodd {
-    background-color: lighten(var(--background-color),15%);
+  background-color: lighten(var(--background-color), 15%);
 }

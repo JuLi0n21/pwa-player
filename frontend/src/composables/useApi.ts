@@ -1,19 +1,21 @@
-import { MusicBackendApi, Configuration, } from '@/generated';
-import type { ConfigurationParameters } from '@/generated';
-import { ref } from 'vue';
+import { MusicBackendApi, Configuration } from "@/generated";
+import type { ConfigurationParameters } from "@/generated";
+import { useUser } from "./useUser";
+import { computed } from "vue";
 
 export function useApi() {
-    const basePath = ref(import.meta.env.BACKEND_URL || 'http://localhost:8080');
-    const musicApi = (): MusicBackendApi => {
+  const userStore = useUser();
+
+  const musicApi = computed(() => {
     const configParams: ConfigurationParameters = {
-        basePath: basePath.value,
+      basePath: userStore.cloudflareUrl.value,
     };
 
     const configuration = new Configuration(configParams);
     return new MusicBackendApi(configuration);
-    };
+  });
 
-    return {
-        musicApi,
-    };
+  return {
+    musicApi,
+  };
 }

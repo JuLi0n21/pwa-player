@@ -9,12 +9,8 @@
       "name": "MusicBackend"
     }
   ],
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
   "paths": {
     "/api/v1/artist/{artist}": {
       "get": {
@@ -41,9 +37,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/collections": {
@@ -92,9 +86,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/favorites": {
@@ -136,9 +128,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/recent": {
@@ -174,9 +164,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/search": {
@@ -218,9 +206,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/search/artists": {
@@ -262,9 +248,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/search/collections": {
@@ -306,9 +290,7 @@
             "format": "int32"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/api/v1/song/{hash}": {
@@ -336,9 +318,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     },
     "/ping": {
@@ -366,9 +346,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "MusicBackend"
-        ]
+        "tags": ["MusicBackend"]
       }
     }
   },

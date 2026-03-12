@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import SongItem from '../components/SongItem.vue'
+import SongItem from "../components/SongItem.vue";
 
-import { type Song, type CollectionPreview, mapApiToSongs } from '../script/types'
-import { ref, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router';
-import { useAudio } from '@/composables/useAudio';
-import { useUser } from '@/composables/useUser';
-import { useApi } from '@/composables/useApi';
+import { type Song, type CollectionPreview, mapApiToSongs } from "../script/types";
+import { ref, onMounted, nextTick } from "vue";
+import { useRoute } from "vue-router";
+import { useAudio } from "@/composables/useAudio";
+import { useUser } from "@/composables/useUser";
+import { useApi } from "@/composables/useApi";
 
 const userStore = useUser();
 const audioStore = useAudio();
 const { musicApi } = useApi();
-const api = musicApi()
-
+const api = musicApi.value;
 
 const songs = ref<Song[]>([]);
-const name = ref('name');
+const name = ref("name");
 const containerRef = ref<HTMLElement | null>(null);
 
 const limit = ref(100);
@@ -27,31 +26,29 @@ const fetchRecent = async () => {
 
   isLoading.value = true;
   try {
-      const response = await api.musicBackendRecent(limit.value, offset.value);
-      if (response.data.songs) {
-        let newSongs = mapApiToSongs(response.data.songs);
+    const response = await api.musicBackendRecent(limit.value, offset.value);
+    if (response.data.songs) {
+      let newSongs = mapApiToSongs(response.data.songs);
 
-  offset.value += limit.value;
-  songs.value = [...songs.value, ...newSongs];
+      offset.value += limit.value;
+      songs.value = [...songs.value, ...newSongs];
 
-  isLoading.value = false;
-  audioStore.setCollection(songs.value);
-      }
-    } catch (error) {
-      console.error('Failed to load songs:', error)
+      isLoading.value = false;
+      audioStore.setCollection(songs.value);
+    }
+  } catch (error) {
+    console.error("Failed to load songs:", error);
   }
-
-}
-
+};
 
 onMounted(async () => {
   await fetchRecent();
 
-  await nextTick(); 
+  await nextTick();
 
   const container = containerRef.value;
   if (container) {
-    container.addEventListener('scroll', async () => {
+    container.addEventListener("scroll", async () => {
       const scrollTop = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
@@ -61,16 +58,11 @@ onMounted(async () => {
       }
     });
   }
-
 });
-
 </script>
 
 <template>
-    <div
-      ref="containerRef"
-      class="flex-1 flex-col overflow-y-scroll song-container"
-    >
-      <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
-    </div>
+  <div ref="containerRef" class="flex-col flex-1 overflow-y-scroll song-container">
+    <SongItem v-for="(song, index) in songs" :key="index" :song="song" />
+  </div>
 </template>

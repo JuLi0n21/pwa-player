@@ -1,19 +1,27 @@
-.v-enter-from, .v-leave-to
-{
-animation: fadeIn 0.5s;  
-
+.v-enter-from,
+.v-leave-to {
+  animation: fadeIn 0.5s;
 }
 
-.v-enter-to, .v-leave-from {
-animation: fadeOut 0.5s;  
+.v-enter-to,
+.v-leave-from {
+  animation: fadeOut 0.5s;
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

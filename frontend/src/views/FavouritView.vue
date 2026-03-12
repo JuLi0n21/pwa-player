@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SongItem from '../components/SongItem.vue'
+import SongItem from "../components/SongItem.vue";
 </script>
 
 <template>

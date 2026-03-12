@@ -1,19 +1,19 @@
-import { ref } from 'vue';
-import type { Me } from '@/script/types';
+import { ref } from "vue";
+import type { Me } from "@/script/types";
 
 let userInstance: ReturnType<typeof createUser> | null = null;
 
 function createUser() {
   const user = ref<Me | null>(null);
-  const baseUrl = ref(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080');
-  const proxyUrl = ref(import.meta.env.VITE_PROXY_URL || 'https://proxy.illegalesachen.download');
+  const cloudflareUrl = ref(import.meta.env.VITE_BACKEND_URL || "http://localhost:8080");
+  const proxyUrl = ref(import.meta.env.VITE_PROXY_URL || "https://proxy.illegalesachen.download");
 
   function saveUser(u: Me | null) {
-    localStorage.setItem('activeUser', JSON.stringify(u));
+    localStorage.setItem("activeUser", JSON.stringify(u));
   }
 
   function loadUser(): Me | null {
-    const u = localStorage.getItem('activeUser');
+    const u = localStorage.getItem("activeUser");
     return u ? JSON.parse(u) : null;
   }
 
@@ -25,12 +25,12 @@ function createUser() {
   async function fetchMe(): Promise<Me | {}> {
     try {
       const response = await fetch(`${proxyUrl.value}/me`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
 
       if (response.redirected) {
-        window.open(response.url, '_blank');
+        window.open(response.url, "_blank");
         return { redirected: true };
       }
 
@@ -42,7 +42,7 @@ function createUser() {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error("Fetch error:", error);
       return {};
     }
   }
@@ -51,7 +51,7 @@ function createUser() {
 
   return {
     user,
-    baseUrl,
+    cloudflareUrl,
     proxyUrl,
     setUser,
     fetchMe,

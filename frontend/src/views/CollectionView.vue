@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { type Song, type CollectionPreview, mapApiToCollectionPreview } from '../script/types'
-import { ref, onMounted } from 'vue'
-import CollectionListItem from '../components/CollectionListItem.vue'
-import { useUser } from '@/composables/useUser';
-import { useApi } from '@/composables/useApi';
+import { type Song, type CollectionPreview, mapApiToCollectionPreview } from "../script/types";
+import { ref, onMounted } from "vue";
+import CollectionListItem from "../components/CollectionListItem.vue";
+import { useApi } from "@/composables/useApi";
 
-const userStore = useUser();
-const { musicApi } = useApi()
-const api = musicApi()
+const { musicApi } = useApi();
+const api = musicApi.value;
 
 const collections = ref<CollectionPreview[]>([]);
 const limit = ref(10);
@@ -19,7 +17,7 @@ const fetchCollections = async () => {
   isLoading.value = true;
 
   const response = await api.musicBackendSearchCollections("", limit.value, offset.value);
-  let songs = mapApiToCollectionPreview(response.data.collections)
+  let songs = mapApiToCollectionPreview(response.data.collections || [], offset.value);
   collections.value = [...collections.value, ...songs];
   offset.value += limit.value;
 
@@ -29,9 +27,9 @@ const fetchCollections = async () => {
 onMounted(async () => {
   await fetchCollections();
 
-  const container = document.querySelector('.collection-container');
+  const container = document.querySelector(".collection-container");
   if (container) {
-    container.addEventListener('scroll', async () => {
+    container.addEventListener("scroll", async () => {
       const scrollTop = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
@@ -42,11 +40,10 @@ onMounted(async () => {
     });
   }
 });
-
 </script>
 
 <template>
-  <main class="flex-1 text-center flex flex-col h-full overflow-y-hidden">
+  <main class="flex flex-col flex-1 h-full overflow-y-hidden text-center">
     <div class="flex flex-col overflow-y-scroll collection-container">
       <CollectionListItem v-for="(collection, index) in collections" :key="index" :collection="collection" />
     </div>

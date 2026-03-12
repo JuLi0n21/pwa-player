@@ -1,43 +1,31 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import NowPlaying from '@/components/NowPlaying.vue'
-import NowPlayingView from '@/views/NowPlayingView.vue'
-import MenuView from '@/views/MenuView.vue'
-import HistoryView from '@/views/HistoryView.vue'
-import Footer from '@/components/Footer.vue'
-import { ref, onMounted, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { isMobile, isPc } from './script/utils.ts'
-import { useAudio } from './composables/useAudio.ts'
+import { RouterLink, RouterView } from "vue-router";
+import NowPlaying from "@/components/NowPlaying.vue";
+import NowPlayingView from "@/views/NowPlayingView.vue";
+import MenuView from "@/views/MenuView.vue";
+import HistoryView from "@/views/HistoryView.vue";
+import Footer from "@/components/Footer.vue";
+import { ref, onMounted, watch, onUnmounted } from "vue";
+import { useRoute } from "vue-router";
+import { isMobile, isPc } from "./script/utils.ts";
 
 const showNowPlaying = ref(true);
 const route = useRoute();
-const audioRef = ref<HTMLAudioElement | null>(null)
-const audio = useAudio(audioRef);
 
 watch(route, async (to) => {
-
   if (route.path.startsWith("/nowplaying")) {
     showNowPlaying.value = false;
   } else {
     showNowPlaying.value = true;
   }
-/*
-  if (route.path.startsWith("/menu")) {
-    headerStore.hide();
-  } else {
-    headerStore.show();
-  }
-*/
-})
+});
 
 function loadColors() {
+  document.documentElement.style.setProperty("--background-color", localStorage.getItem("bgColor") || "#1c1719");
+  document.documentElement.style.setProperty("--action-color", localStorage.getItem("actionColor") || "#eab308");
 
-  document.documentElement.style.setProperty('--background-color', localStorage.getItem('bgColor') || '#1c1719');
-  document.documentElement.style.setProperty('--action-color', localStorage.getItem('actionColor') || '#eab308');
-
-  document.documentElement.style.setProperty('--information-color', localStorage.getItem('infoColor') || '#ec4899');
-  document.documentElement.style.setProperty('--border-color', localStorage.getItem('borderColor') || '#ec4899');
+  document.documentElement.style.setProperty("--information-color", localStorage.getItem("infoColor") || "#ec4899");
+  document.documentElement.style.setProperty("--border-color", localStorage.getItem("borderColor") || "#ec4899");
 }
 
 loadColors();
@@ -50,29 +38,27 @@ const screenInfo = ref({
 const checkScreenSize = () => {
   screenInfo.value.isSmall = isMobile();
   screenInfo.value.isMedium = isPc();
-
 };
 
 onMounted(() => {
   checkScreenSize();
-  window.addEventListener('resize', checkScreenSize);
+  window.addEventListener("resize", checkScreenSize);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkScreenSize);
+  window.removeEventListener("resize", checkScreenSize);
 });
 </script>
 <template>
-  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen wrapper info text-xl">
+  <div v-if="screenInfo.isSmall" class="flex flex-col h-screen max-h-screen text-xl wrapper info">
     <RouterView />
     <NowPlaying v-show="showNowPlaying" />
     <Footer />
   </div>
 
-  <div v-else class="flex flex-col h-screen max-h-screen wrapper info text-xl">
+  <div v-else class="flex flex-col h-screen max-h-screen text-xl wrapper info">
     <main class="flex flex-1 w-full h-full overflow-y-hidden">
-      
-      <aside class="w-1/12 bg-primary p-4 overflow-y-scroll">
+      <aside class="bg-primary p-4 w-1/12 overflow-y-scroll">
         <HistoryView />
       </aside>
 
@@ -80,7 +66,7 @@ onUnmounted(() => {
         <RouterView />
       </section>
 
-      <section class="w-1/5 overflow-y-scroll flex flex-col">
+      <section class="flex flex-col w-1/5 overflow-y-scroll">
         <NowPlayingView />
       </section>
     </main>
