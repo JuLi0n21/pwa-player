@@ -37,16 +37,6 @@ type Server struct {
 	v1.UnimplementedMusicBackendServer
 }
 
-func (s *Server) registerRoutes() *http.ServeMux {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/api/v1/audio/{filepath}", s.songFile)
-	mux.HandleFunc("/api/v1/image/{filepath}", s.imageFile)
-	mux.HandleFunc("/api/v1/callback", s.callback)
-
-	return mux
-}
-
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL.Path)
@@ -71,10 +61,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func (s *Server) Ping(ctx context.Context, req *v1.PingRequest) (*v1.PingResponse, error) {
 	return &v1.PingResponse{Pong: "pong"}, nil
-}
-
-func (s *Server) login(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://proxy.illegalesachen.download/login", http.StatusTemporaryRedirect)
 }
 
 func (s *Server) Song(ctx context.Context, req *v1.SongRequest) (*v1.SongResponse, error) {
@@ -153,9 +139,9 @@ func (s *Server) Collections(ctx context.Context, req *v1.CollectionRequest) (*v
 	}
 
 	c, err := s.Sqlc.GetCollectionByOffset(ctx, sqlcdb.GetCollectionByOffsetParams{
-		Offset:   int64(req.Index),
-		Limit:    int64(limit),
-		Offset_2: int64(offset),
+		Offset: int64(offset),
+		Limit:  int64(limit),
+		Index:  int64(req.Index),
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -196,8 +182,7 @@ func (s *Server) Search(ctx context.Context, req *v1.SearchSharedRequest) (*v1.S
 func (s *Server) SearchCollections(ctx context.Context, req *v1.SearchCollectionRequest) (*v1.SearchCollectionResponse, error) {
 	q := req.Query
 	q = "%" + q + "%"
-	//limit := defaultLimit(int(req.Limit))
-	limit := 10000
+	limit := defaultLimit(int(req.Limit))
 	offset := int(req.Offset)
 
 	preview, err := s.Sqlc.SearchCollection(ctx, sqlcdb.SearchCollectionParams{

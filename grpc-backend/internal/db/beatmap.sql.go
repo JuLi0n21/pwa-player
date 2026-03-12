@@ -223,7 +223,8 @@ func (q *Queries) SearchArtists(ctx context.Context, arg SearchArtistsParams) ([
 const searchBeatmaps = `-- name: SearchBeatmaps :many
 SELECT beatmapid, artist, artistunicode, title, titleunicode, creator, difficulty, audio, md5hash, file, rankedstatus, lastmodifiedtime, totaltime, audiopreviewtime, beatmapsetid, source, tags, lastplayed, folder 
 FROM Beatmap 
-WHERE Title LIKE ? OR Artist LIKE ? 
+WHERE Title LIKE ? OR Artist LIKE ?
+GROUP BY Folder
 LIMIT ? OFFSET ?
 `
 

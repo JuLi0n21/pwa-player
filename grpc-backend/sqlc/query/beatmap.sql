@@ -22,7 +22,8 @@ FROM Beatmap GROUP BY Folder ORDER BY LastModifiedTime DESC LIMIT ? OFFSET ?;
 -- name: SearchBeatmaps :many
 SELECT * 
 FROM Beatmap 
-WHERE Title LIKE ? OR Artist LIKE ? 
+WHERE Title LIKE ? OR Artist LIKE ?
+GROUP BY Folder
 LIMIT ? OFFSET ?;
 
 -- name: SearchArtists :many

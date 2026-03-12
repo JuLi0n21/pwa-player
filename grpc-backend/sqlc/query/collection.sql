@@ -35,9 +35,9 @@ WHERE c.Name = (
   FROM Collection
   GROUP BY Name
   ORDER BY Name
-  LIMIT 1 OFFSET ?1
+  LIMIT 1 OFFSET @index
 )
-LIMIT ?2 OFFSET ?3;
+LIMIT @limit OFFSET @offset;
 
 -- name: GetCollectionByName :many
 SELECT c.Name, b.BeatmapId, b.MD5Hash, b.Title, b.Artist, b.Creator, b.Folder, b.File, b.Audio, b.TotalTime

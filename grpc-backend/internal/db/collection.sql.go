@@ -92,13 +92,13 @@ WHERE c.Name = (
   ORDER BY Name
   LIMIT 1 OFFSET ?1
 )
-LIMIT ?2 OFFSET ?3
+LIMIT ?3 OFFSET ?2
 `
 
 type GetCollectionByOffsetParams struct {
-	Offset   int64 `json:"offset"`
-	Limit    int64 `json:"limit"`
-	Offset_2 int64 `json:"offset_2"`
+	Index  int64 `json:"index"`
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
 }
 
 type GetCollectionByOffsetRow struct {
@@ -115,7 +115,7 @@ type GetCollectionByOffsetRow struct {
 }
 
 func (q *Queries) GetCollectionByOffset(ctx context.Context, arg GetCollectionByOffsetParams) ([]GetCollectionByOffsetRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCollectionByOffset, arg.Offset, arg.Limit, arg.Offset_2)
+	rows, err := q.db.QueryContext(ctx, getCollectionByOffset, arg.Index, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

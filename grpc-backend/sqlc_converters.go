@@ -70,8 +70,13 @@ func toProtoCollectionoffsetSqlc(rows []db.GetCollectionByOffsetRow) *v1.Collect
 		})
 	}
 
+	name := "Empty Collection"
+	if len(rows) > 0 {
+		name = rows[0].Name.String
+	}
+
 	return &v1.CollectionResponse{
-		Name:  rows[0].Name.String,
+		Name:  name,
 		Items: int32(len(rows)),
 		Songs: songs,
 	}
